@@ -1,0 +1,30 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lead-queue-web",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-09-15",
+
+  // Static page from ./public; the Worker runs first only for /api/* (the proxy).
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*"]
+  },
+
+  // Reachable only through the custom domain, which Cloudflare Access protects. The
+  // *.workers.dev and preview URLs would bypass the Google login, so both are off.
+  "workers_dev": false,
+  "preview_urls": false,
+  "routes": [{ "pattern": "leads.tinkenergy.dev", "custom_domain": true }],
+
+  // Not secret. Set ACCESS_TEAM_DOMAIN and ACCESS_AUD from the Access application
+  // (Zero Trust -> Access -> Applications -> the app -> Overview).
+  // The API key is a secret: `npx wrangler secret put LEAD_QUEUE_API_KEY`.
+  "vars": {
+    "API_BASE_URL": "https://reonic-sync-api.onrender.com",
+    "ACCESS_TEAM_DOMAIN": "old-lab-3942.cloudflareaccess.com",
+    "ACCESS_AUD": "a9840a0e59951fc9223e9a9bfdb4a55843c287f6e9427f55e24bb76ffab4df91"
+  },
+
+  "observability": { "enabled": true }
+}

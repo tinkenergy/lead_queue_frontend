@@ -1,0 +1,9 @@
+# Copy to .dev.vars for `npm run dev` (never committed).
+# Local only: there is no Cloudflare Access in front of localhost, so a fixed user is used.
+# The Worker ignores this on any host other than localhost/127.0.0.1.
+ALLOW_DEV_USER=true
+DEV_USER_EMAIL=you@tink.io
+# Same value as LEAD_QUEUE_API_KEY of the API you point API_BASE_URL at.
+LEAD_QUEUE_API_KEY=
+# Optional: point at a local API instead of Render.
+# API_BASE_URL=http://localhost:8000
