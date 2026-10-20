@@ -89,8 +89,8 @@
     if (!stats) return;
     var fresh = (stats.by_priority && stats.by_priority.new) || 0;
     var parts = [
-      stats.available + (stats.available === 1 ? " Lead insgesamt" : " Leads insgesamt"),
-      fresh + (fresh === 1 ? " Neuer Lead" : " Neue Leads"),
+      stats.available + (stats.available === 1 ? " Lead" : " Leads"),
+      fresh + (fresh === 1 ? " neuer Lead" : " neue Leads"),
       stats.active_reps + (stats.active_reps === 1 ? " Rep aktiv" : " Reps aktiv"),
     ];
     queueEl.textContent = parts.join(" · ");
