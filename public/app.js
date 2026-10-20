@@ -1,7 +1,9 @@
 (function () {
   "use strict";
 
-  var PRIORITY_LABELS = { new: "New lead", evening_retry: "Evening retry", follow_up: "Follow-up" };
+  var PRIORITY_LABELS = { new: "Neuer Lead", evening_retry: "Abendversuch", follow_up: "Nachfassen" };
+  var READY_TITLE = "Bereit, wenn du es bist";
+  var READY_TEXT = "Hol dir einen Lead, um loszulegen. Er bleibt für dich reserviert, bis du den nächsten anforderst.";
   var STATS_INTERVAL_MS = 60 * 1000;
 
   var slot = document.getElementById("slot");
@@ -10,6 +12,10 @@
   var noticeEl = document.getElementById("notice");
   var nextBtn = document.getElementById("next");
   var skipBtn = document.getElementById("skip");
+  var inactiveBtn = document.getElementById("inactive");
+  var logoutBtn = document.getElementById("logout");
+  /** Cloudflare Access ends the login for all Access apps and deletes the cookie here. */
+  var LOGOUT_URL = "/cdn-cgi/access/logout";
 
   /** The rep's reserved lead: { lead, lease } from the API, or null. */
   var current = null;
@@ -30,14 +36,14 @@
       response = await fetch("/api" + path, options);
     } catch (e) {
       // An expired Access session redirects to the login page, which fetch can't follow.
-      var offline = new Error("No connection, or your login expired. Reload the page.");
+      var offline = new Error("Keine Verbindung, oder dein Login ist abgelaufen. Lade die Seite neu.");
       offline.status = 0;
       throw offline;
     }
     var data = null;
     try { data = await response.json(); } catch (_) {}
     if (!response.ok) {
-      var error = new Error((data && data.detail) || "Request failed (HTTP " + response.status + ").");
+      var error = new Error((data && data.detail) || "Anfrage fehlgeschlagen (HTTP " + response.status + ").");
       error.status = response.status;
       throw error;
     }
@@ -65,12 +71,12 @@
 
   function relative(iso) {
     var minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000);
-    if (minutes < 1) return "just now";
-    if (minutes < 60) return minutes + (minutes === 1 ? " minute ago" : " minutes ago");
+    if (minutes < 1) return "gerade eben";
+    if (minutes < 60) return "vor " + minutes + (minutes === 1 ? " Minute" : " Minuten");
     var hours = Math.round(minutes / 60);
-    if (hours < 24) return hours + (hours === 1 ? " hour ago" : " hours ago");
+    if (hours < 24) return "vor " + hours + (hours === 1 ? " Stunde" : " Stunden");
     var days = Math.round(hours / 24);
-    return days + (days === 1 ? " day ago" : " days ago");
+    return "vor " + days + (days === 1 ? " Tag" : " Tagen");
   }
 
   function countdown(ms) {
@@ -81,29 +87,32 @@
 
   function renderStats(stats) {
     if (!stats) return;
-    var parts = [stats.available + (stats.available === 1 ? " lead waiting" : " leads waiting")];
-    if (stats.by_priority && stats.by_priority.new) parts.push(stats.by_priority.new + " new");
-    parts.push(stats.active_reps + (stats.active_reps === 1 ? " rep active" : " reps active"));
+    var fresh = (stats.by_priority && stats.by_priority.new) || 0;
+    var parts = [
+      stats.available + (stats.available === 1 ? " Lead insgesamt" : " Leads insgesamt"),
+      fresh + (fresh === 1 ? " Neuer Lead" : " Neue Leads"),
+      stats.active_reps + (stats.active_reps === 1 ? " Rep aktiv" : " Reps aktiv"),
+    ];
     queueEl.textContent = parts.join(" · ");
   }
 
   function renderLead(data) {
     var lead = data.lead;
-    var name = lead.name || "Unnamed contact";
+    var name = lead.name || "Kontakt ohne Namen";
     var pips = el("div", { class: "pips", "aria-hidden": "true" });
     for (var i = 0; i < lead.max_calls; i++) {
       pips.appendChild(el("span", { class: "pip" + (i < lead.call_count ? " on" : "") }));
     }
     var lastContacted = lead.last_contacted_at
       ? el("dd", null, [document.createTextNode(fmtDate(lead.last_contacted_at)), el("small", { text: relative(lead.last_contacted_at) })])
-      : el("dd", { text: "Never" });
+      : el("dd", { text: "Nie" });
 
     var card = el("a", {
       class: "card",
       href: lead.hubspot_url,
       target: "_blank",
       rel: "noopener noreferrer",
-      "aria-label": "Open " + name + " in HubSpot",
+      "aria-label": name + " in HubSpot öffnen",
     }, [
       el("div", { class: "meta" }, [
         el("span", { class: "badge", text: PRIORITY_LABELS[lead.priority] || lead.priority }),
@@ -111,17 +120,17 @@
       ]),
       el("h1", { class: "name", text: name }),
       el("dl", { class: "facts" }, [
-        el("div", null, [el("dt", { text: "Calls" }), el("dd", { text: lead.call_count + " of " + lead.max_calls }), pips]),
-        el("div", null, [el("dt", { text: "Zip code" }), el("dd", { text: lead.zip || "Not set" })]),
-        el("div", { class: "wide" }, [el("dt", { text: "Last contacted" }), lastContacted]),
+        el("div", null, [el("dt", { text: "Anrufe" }), el("dd", { text: lead.call_count + " von " + lead.max_calls }), pips]),
+        el("div", null, [el("dt", { text: "PLZ" }), el("dd", { text: lead.zip || "Keine Angabe" })]),
+        el("div", { class: "wide" }, [el("dt", { text: "Zuletzt kontaktiert" }), lastContacted]),
       ]),
       el("div", { class: "open-hint" }, [
-        el("span", { text: "Open contact in HubSpot" }),
+        el("span", { text: "Kontakt in HubSpot öffnen" }),
         el("span", { id: "countdown" }),
       ]),
     ]);
     slot.replaceChildren(card);
-    if (data.stale) showNotice("HubSpot didn't respond, so these details may be out of date.", false);
+    if (data.stale) showNotice("HubSpot hat nicht geantwortet, die Angaben sind evtl. nicht aktuell.", false);
     else hideNotice();
   }
 
@@ -145,7 +154,8 @@
 
   function setHolding(holding) {
     skipBtn.hidden = !holding;
-    nextBtn.textContent = holding ? "Next lead" : "Get a lead";
+    inactiveBtn.hidden = !holding;
+    nextBtn.textContent = holding ? "Nächster Lead" : "Lead holen";
   }
 
   // --- lease timer ----------------------------------------------------------------------
@@ -167,14 +177,14 @@
     var warnAt = new Date(current.lease.warn_at).getTime();
     var returnAt = new Date(current.lease.return_at).getTime();
     var label = document.getElementById("countdown");
-    if (label) label.textContent = "Reserved for you · " + countdown(returnAt - now);
+    if (label) label.textContent = "Für dich reserviert · " + countdown(returnAt - now);
 
     if (now >= returnAt) {
       returnLead("timeout");
     } else if (now >= warnAt && noticeEl.dataset.kind !== "warn") {
-      var keep = el("button", { type: "button", class: "small", text: "Keep" });
+      var keep = el("button", { type: "button", class: "small", text: "Behalten" });
       keep.addEventListener("click", keepLead);
-      showNotice("Still on it? The lead goes back to the queue soon.", false, keep);
+      showNotice("Noch dran? Der Lead geht gleich zurück in die Warteschlange.", false, keep);
       noticeEl.dataset.kind = "warn";
     }
   }
@@ -194,7 +204,7 @@
       stopTicker();
       setHolding(false);
       hideNotice();
-      renderState("No leads to call", "Every callable lead is taken or was called recently. Try again in a moment.", false);
+      renderState("Gerade keine Leads", "Alle anrufbaren Leads sind vergeben oder wurden kürzlich angerufen. Versuch es gleich noch einmal.", false);
     }
   }
 
@@ -205,7 +215,7 @@
       stopTicker();
       setHolding(false);
       hideNotice();
-      renderState("Lead returned to the queue", "This lead is no longer reserved for you. Get a new one.", false);
+      renderState("Lead zurück in der Warteschlange", "Dieser Lead ist nicht mehr für dich reserviert. Hol dir einen neuen.", false);
       return;
     }
     showNotice(error.message, true);
@@ -245,7 +255,7 @@
     stopTicker();
     setHolding(false);
     hideNotice();
-    renderState("Lead returned to the queue", "You didn't request a new lead for a while, so this one went back to the queue.", false);
+    renderState("Lead zurück in der Warteschlange", "Du hast eine Weile keinen neuen Lead angefordert, deshalb ging dieser zurück in die Warteschlange.", false);
     try {
       await api("/leads/" + leadId + "/release", { reason: reason });
       refreshStats();
@@ -254,6 +264,45 @@
     } finally {
       returning = false;
     }
+  }
+
+  /** "Inaktiv": return the lead (with cooldown, the rep may have called) and stop. */
+  async function goInactive() {
+    if (busy) return;
+    busy = true;
+    var leadId = current && current.lead.lead_id;
+    current = null;
+    stopTicker();
+    setHolding(false);
+    hideNotice();
+    renderState(READY_TITLE, READY_TEXT, false);
+    try {
+      if (leadId) await api("/leads/" + leadId + "/release", { reason: "done" });
+      refreshStats();
+    } catch (error) {
+      showNotice(error.message, true);
+    } finally {
+      busy = false;
+    }
+  }
+
+  /** "Logout": return the lead like "Inaktiv" does, then end the Access login. */
+  async function logout() {
+    logoutBtn.disabled = true;
+    var leadId = current && current.lead.lead_id;
+    current = null; // no "tab closed" release on the way out
+    stopTicker();
+    if (leadId) {
+      try {
+        await Promise.race([
+          api("/leads/" + leadId + "/release", { reason: "done" }),
+          new Promise(function (resolve) { setTimeout(resolve, 3000); }),
+        ]);
+      } catch (_) {
+        // The server frees it on its own a little later.
+      }
+    }
+    window.location.href = LOGOUT_URL;
   }
 
   async function refreshStats() {
@@ -273,6 +322,8 @@
 
   nextBtn.addEventListener("click", function () { nextLead("done"); });
   skipBtn.addEventListener("click", function () { nextLead("skipped"); });
+  inactiveBtn.addEventListener("click", goInactive);
+  logoutBtn.addEventListener("click", logout);
 
   // Closing the tab returns the lead (held back for the cooldown, the rep may have called).
   window.addEventListener("pagehide", function () {
@@ -292,16 +343,17 @@
     try {
       var session = await api("/session");
       whoEl.textContent = session.email;
+      logoutBtn.hidden = false;
       var data = await api("/me");
       if (data.lead) {
         show(data);
       } else {
         renderStats(data.queue);
         setHolding(false);
-        renderState("Ready when you are", "Get a lead to start calling. It is reserved for you until you ask for the next one.", false);
+        renderState(READY_TITLE, READY_TEXT, false);
       }
     } catch (error) {
-      renderState("Could not load the lead queue", error.message, true);
+      renderState("Lead-Warteschlange konnte nicht geladen werden", error.message, true);
     } finally {
       nextBtn.disabled = false;
     }

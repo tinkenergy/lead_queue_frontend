@@ -16,13 +16,20 @@ signed-in email. Everything else under `/api` answers 404.
 
 ## How the page behaves
 
-- **Get a lead / Next lead**: reserves the next lead (`previous_outcome: done`, so the previous
-  lead is held back for the cooldown). **Skip (not called)** returns the current lead at once.
+The page is in German.
+
+- **Lead holen / Nächster Lead**: reserves the next lead (`previous_outcome: done`, so the
+  previous lead is held back for the cooldown). **Skip (nicht angerufen)** returns the current
+  lead at once; the API doesn't give it to the same rep again for a while.
 - **Timer**: the lead is reserved until `lease.return_at`. From `lease.warn_at` the page asks
-  "Still on it?" with **Keep** (extends the reservation). At `return_at` it returns the lead
+  "Noch dran?" with **Behalten** (extends the reservation). At `return_at` it returns the lead
   itself. All times come from the API (`LEAD_QUEUE_*` settings there), none are set here.
 - **Reload / second tab**: `GET /api/me` shows the same lead. Closing the tab sends
   `release: unload`; the API keeps the lead for a short grace period so a reload gets it back.
+- **Inaktiv**: returns the current lead (with the cooldown) and goes back to the start page.
+- **Logout**: returns the current lead like "Inaktiv", then opens `/cdn-cgi/access/logout`,
+  which ends the Cloudflare Access login (for all Access apps) and deletes its cookie, e.g.
+  to switch to another Google account.
 - Clicking the card opens the contact in HubSpot.
 
 ## Local development

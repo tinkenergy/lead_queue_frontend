@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lead queue</title>
+<title>Lead-Warteschlange</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23007F55'/%3E%3Cpath d='M10 9v14h12' stroke='white' stroke-width='3' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -14,7 +14,13 @@
 <main>
   <div class="bar top">
     <span class="queue" id="queue" aria-live="polite"></span>
-    <span class="who" id="who"></span>
+    <div class="who-box">
+      <div class="who-actions">
+        <button id="inactive" type="button" class="quiet tiny" hidden>Inaktiv</button>
+        <button id="logout" type="button" class="tiny danger" hidden>Logout</button>
+      </div>
+      <span class="who" id="who"></span>
+    </div>
   </div>
 
   <div id="slot" aria-live="polite">
@@ -23,15 +29,15 @@
       <div class="skeleton big"></div>
       <div class="skeleton"></div>
       <div class="skeleton short"></div>
-      <span class="sr-only">Loading</span>
+      <span class="sr-only">Wird geladen</span>
     </div>
   </div>
 
   <div class="notice" id="notice" hidden></div>
 
   <div class="bar">
-    <button id="skip" type="button" class="quiet" hidden>Skip (not called)</button>
-    <button id="next" type="button" disabled>Next lead</button>
+    <button id="skip" type="button" class="quiet" hidden>Skip (nicht angerufen)</button>
+    <button id="next" type="button" disabled>Lead holen</button>
   </div>
 </main>
 <script src="/app.js" defer></script>

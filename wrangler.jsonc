@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "lead-queue-web",
+  "name": "lead-queue-frontend",
   "main": "src/worker.js",
   "compatibility_date": "2026-09-15",
 

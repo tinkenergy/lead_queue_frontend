@@ -59,14 +59,14 @@ export default {
       user = await authenticate(request, env);
     } catch (error) {
       console.error("Access check failed", error);
-      return json({ detail: "Could not check your login. Reload the page." }, 503);
+      return json({ detail: "Dein Login konnte nicht geprüft werden. Lade die Seite neu." }, 503);
     }
-    if (!user) return json({ detail: "Not signed in. Reload the page." }, 401);
+    if (!user) return json({ detail: "Nicht angemeldet. Lade die Seite neu." }, 401);
     if (url.pathname === "/api/session" && request.method === "GET") return json({ email: user });
 
     const path = upstreamPath(request.method, url.pathname);
-    if (!path) return json({ detail: "Not found." }, 404);
-    if (!env.LEAD_QUEUE_API_KEY) return json({ detail: "The lead queue is not configured." }, 503);
+    if (!path) return json({ detail: "Nicht gefunden." }, 404);
+    if (!env.LEAD_QUEUE_API_KEY) return json({ detail: "Die Lead-Warteschlange ist nicht eingerichtet." }, 503);
 
     const body = request.method === "POST" ? (await request.text()) || "{}" : undefined;
     let upstream;
@@ -83,7 +83,7 @@ export default {
       });
     } catch (error) {
       console.error("Lead queue API unreachable", error);
-      return json({ detail: "The lead queue is not reachable right now. Try again." }, 502);
+      return json({ detail: "Die Lead-Warteschlange ist gerade nicht erreichbar. Versuch es gleich noch einmal." }, 502);
     }
     return new Response(upstream.body, {
       status: upstream.status,

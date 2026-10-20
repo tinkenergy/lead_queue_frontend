@@ -9,6 +9,8 @@
   --accent-soft: #e2f2ea;
   --pip-empty: #e3e7ec;
   --warn: #b3261e;
+  --danger-bg: #fde8e6;
+  --danger-line: #f4c7c3;
   color-scheme: light;
   box-sizing: border-box;
 }
@@ -24,6 +26,8 @@
     --accent-soft: #173a30;
     --pip-empty: #2b3954;
     --warn: #ff8a80;
+    --danger-bg: #3a1f22;
+    --danger-line: #5a2d31;
     color-scheme: dark;
   }
 }
@@ -38,6 +42,8 @@
   --accent-soft: #173a30;
   --pip-empty: #2b3954;
   --warn: #ff8a80;
+  --danger-bg: #3a1f22;
+  --danger-line: #5a2d31;
   color-scheme: dark;
 }
 *, *::before, *::after { box-sizing: inherit; }
@@ -149,9 +155,37 @@ a.card:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
   justify-content: flex-end;
   gap: 12px;
 }
-.bar.top { justify-content: space-between; }
+.bar.top { justify-content: space-between; align-items: flex-end; flex-wrap: wrap; row-gap: 8px; }
 .queue, .who { font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
 .who { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar.top .queue { flex: 1 1 180px; min-width: 0; }
+/* Email with the two rarely used buttons above it. */
+.who-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+  max-width: 100%;
+  margin-left: auto;
+}
+.who-actions { display: flex; gap: 6px; }
+.who-actions:not(:has(button:not([hidden]))) { display: none; }
+/* About half the height of the main buttons: special, rarely needed. */
+button.tiny {
+  padding: 2px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-radius: 7px;
+  flex-shrink: 0;
+}
+button.tiny.quiet { padding: 1px 9px; }
+button.danger {
+  background: var(--danger-bg);
+  color: var(--warn);
+  border: 1px solid var(--danger-line);
+  padding: 1px 9px;
+}
 
 .notice {
   border-radius: 14px;
