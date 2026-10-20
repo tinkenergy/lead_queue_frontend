@@ -87,9 +87,12 @@
 
   function renderStats(stats) {
     if (!stats) return;
+    // All callable leads, including reserved and cooling-down ones (`available` is the
+    // older API's name for the count of free ones, kept as a fallback during a deploy).
+    var total = stats.total !== undefined ? stats.total : stats.available;
     var fresh = (stats.by_priority && stats.by_priority.new) || 0;
     var parts = [
-      stats.available + (stats.available === 1 ? " Lead" : " Leads"),
+      total + (total === 1 ? " Lead" : " Leads"),
       fresh + (fresh === 1 ? " neuer Lead" : " neue Leads"),
       stats.active_reps + (stats.active_reps === 1 ? " Rep aktiv" : " Reps aktiv"),
     ];
