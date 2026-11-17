@@ -442,7 +442,7 @@
     if (!section) { fill(node, []); return; }
     if (section.status !== "ok") {
       fill(node, [el("div", { class: "tl-panel tl-muted", style: "font-size:14px" }, [
-        section.status === "no_owner" ? "Keine Tageszahlen: dein Login hat keinen HubSpot-Nutzer." : "Tageszahlen gerade nicht verfügbar.",
+        section.status === "no_owner" ? "Kein Hubspot-Nutzer verknüpft." : "Tageszahlen gerade nicht verfügbar.",
       ])]);
       return;
     }
