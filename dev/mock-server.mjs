@@ -47,7 +47,7 @@ function mkLead(id, name, group, extra = {}) {
 
 const h = new Date().getHours();
 const leads = [
-  mkLead("500", "Gerald Kasten", "reachable", { calls: 2, slots: [{ start: `${h}:00`, end: `${h + 1}:00` }], age: 15 }),
+  mkLead("500", "Gerald Kasten", "reachable", { calls: 2, slots: [h, h + 1, h - 5].map((x) => ({ start: `${x}:00`, end: `${x + 1}:00` })), age: 15 }),
   mkLead("501", "Martina Hölscher", "new_leads", { calls: 0, last: null, age: 1, override: { stage: "01 | Neu", stage_id: "new-stage-id" } }),
   mkLead("502", "Jana Beispiel", "hot_leads", { calls: 1, age: 4, slots: [{ start: "18:00", end: "19:00" }] }),
   mkLead("503", "Ralf Opp", "backlog", { calls: 3, age: 40 }),

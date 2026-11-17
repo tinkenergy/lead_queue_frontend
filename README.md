@@ -40,7 +40,8 @@ The page is in German and follows the design system's Fokus layout (version A).
   **Behalten**; at `return_at` the page sends `/lead/expire` and offers **Zurückholen**.
   Clicking the name opens HubSpot and extends the reservation (`reason: hubspot_opened`).
 - **Meeting soon**: when a meeting starts within the reservation length, the action bar
-  offers "Erledigt, Pause bis zum Termin" and "Trotzdem nächster Lead".
+  turns amber, names the meeting on its own line and offers "Überspringen", "Erledigt, weiter"
+  and "Erledigt, Pause bis Termin" (pause until "Weitermachen").
 - **Filters**: quick filters, Gruppe, Quelle, Anrufe, Lead-Alter; the panels show counts from
   `/filters/preview` before applying, and filters are saved per rep on the server.
 - **Aufgaben in HubSpot**: ticking completes the task in HubSpot, unticking reopens it.

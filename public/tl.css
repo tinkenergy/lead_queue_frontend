@@ -74,9 +74,9 @@
 .tl-field__sub { font-size: 14px; line-height: 20px; color: var(--ink-muted); margin-top: 4px; }
 
 /* Call segments: neutral ink, envelope under the mail calls (1, 3, 6) */
-.tl-segments { display: flex; gap: var(--space-1); margin-top: 10px; }
-.tl-segments span { display: grid; justify-items: center; gap: 3px; }
-.tl-segments i { display: block; width: 32px; height: 10px; border-radius: var(--radius-sm); background: var(--surface-200); }
+.tl-segments { display: flex; gap: var(--space-1); margin-top: 10px; max-width: 228px; }
+.tl-segments span { display: grid; justify-items: center; gap: 3px; flex: 1 1 0; min-width: 12px; max-width: 32px; }
+.tl-segments i { display: block; width: 100%; height: 10px; border-radius: var(--radius-sm); background: var(--surface-200); }
 .tl-segments .on i { background: var(--ink); }
 .tl-segments svg { width: 12px; height: 12px; color: var(--ink-muted); }
 .tl-segments .next i { box-shadow: inset 0 0 0 2px var(--ink); }
@@ -246,9 +246,9 @@
 .tl-modal { width: 520px; max-width: 100%; background: var(--surface-0); border-radius: var(--radius-lg); box-shadow: var(--shadow-card), 0 24px 64px rgba(17,21,19,0.25); padding: var(--space-8); display: grid; gap: var(--space-4); }
 .tl-modal__title { font: 800 26px/32px var(--font-display); letter-spacing: -0.01em; margin: 0; }
 .tl-modal__actions { display: flex; gap: var(--space-3); justify-content: flex-end; margin-top: var(--space-2); }
-.tl-mailsteps { display: flex; gap: var(--space-1); align-items: flex-start; }
-.tl-mailsteps span { display: grid; justify-items: center; gap: 6px; }
-.tl-mailsteps i { display: block; width: 34px; height: 10px; border-radius: var(--radius-sm); background: var(--surface-200); }
+.tl-mailsteps { display: flex; gap: var(--space-1); align-items: flex-start; width: 228px; }
+.tl-mailsteps span { display: grid; justify-items: center; gap: 6px; flex: 1 1 0; min-width: 10px; }
+.tl-mailsteps i { display: block; width: 100%; height: 10px; border-radius: var(--radius-sm); background: var(--surface-200); }
 .tl-mailsteps .on i { background: var(--ink); }
 .tl-mailsteps .now i { background: var(--ink); outline: 2px solid var(--ink); outline-offset: 2px; }
 .tl-mailsteps svg { width: 14px; height: 14px; color: var(--ink-muted); }
@@ -258,6 +258,21 @@
 .tl-mailrow__name { flex: 1; font-size: 15px; line-height: 20px; }
 .tl-mailrow a { font-weight: 600; font-size: 14px; white-space: nowrap; }
 .tl-mailrow a svg { width: 14px; height: 14px; vertical-align: -2px; color: currentColor; }
+
+/* Reps online: quiet hint in the header, left of Pause */
+.tl-online { display: inline-flex; align-items: center; gap: 6px; font: 400 13px/16px var(--font-sans); color: var(--ink-muted); margin-right: 6px; white-space: nowrap; }
+.tl-online svg { width: 14px; height: 14px; }
+
+/* Meeting warning: message on its own line, three buttons below */
+.tl-actions--warn { flex-wrap: wrap; }
+.tl-actions--warn .tl-actions__info { flex-basis: 100%; padding: 2px 6px 4px; }
+
+/* Erreichbarkeit with several Tageszeit ranges: day strip 8 to 20 Uhr under the chip */
+.tl-daybar { position: relative; height: 8px; max-width: 260px; margin-top: 10px; border-radius: var(--radius-pill); background: var(--surface-200); }
+.tl-daybar span { position: absolute; top: 0; bottom: 0; border-radius: var(--radius-pill); background: var(--ink-muted); }
+.tl-daybar span.cur { background: var(--reach); }
+.tl-daybar b { position: absolute; top: -4px; width: 2px; height: 16px; margin-left: -1px; background: var(--ink); border-radius: 1px; }
+.tl-daybar__scale { display: flex; justify-content: space-between; max-width: 260px; margin-top: 4px; font: 500 11px/14px var(--font-mono); color: var(--ink-muted); }
 
 /* Multi-select options (Quelle): square check instead of radio */
 .tl-opt .check { width: 18px; height: 18px; border-radius: 5px; border: 2px solid var(--ink-muted); display: grid; place-items: center; }

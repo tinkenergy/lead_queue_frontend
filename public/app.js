@@ -28,6 +28,7 @@
     mail: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2"/><path d="M2 4l6 5 6-5"/></svg>',
     calendar: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5.5 1.5v3M10.5 1.5v3"/></svg>',
     repeat: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2.5 8a5.5 5.5 0 0 1 9.4-3.9l1.6 1.4M13.5 2.5v3h-3M13.5 8a5.5 5.5 0 0 1-9.4 3.9l-1.6-1.4M2.5 13.5v-3h3"/></svg>',
+    people: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="6" cy="5.5" r="2.5"/><path d="M1.5 13.5c.6-2.3 2.3-3.5 4.5-3.5s3.9 1.2 4.5 3.5"/><path d="M10.5 3.2a2.5 2.5 0 0 1 0 4.6M12 10.2c1.3.5 2.1 1.6 2.5 3.3"/></svg>',
     clock: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 4.5V8l2.5 1.5"/></svg>',
     caret: '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 4.5l3 3 3-3"/></svg>',
     filter: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M2 3.5h12M4.5 8h7M7 12.5h2"/></svg>',
@@ -257,7 +258,7 @@
     var current = lead();
     if (!current) return;
     S.toast = null;
-    return act(pause ? "Pause bis zum Termin" : "Erledigt", "POST", "/lead/done", { lead_id: current.lead_id, pause: !!pause }, {
+    return act(pause ? "Erledigt, Pause bis Termin" : "Erledigt", "POST", "/lead/done", { lead_id: current.lead_id, pause: !!pause }, {
       undoName: current.name || "Lead",
       afterReminder: pause ? "close" : "next",
     });
@@ -467,6 +468,14 @@
     pauseBtn.hidden = !S.state || S.unavailable || paused;
     pauseBtn.disabled = S.busy;
     pauseBtn.onclick = pause;
+    // Reps online: a quiet hint left of Pause (queue.active_reps, refreshed with every pulse).
+    var online = $("online");
+    var reps = S.state && S.state.queue ? S.state.queue.active_reps : null;
+    online.hidden = reps === null || reps === undefined || S.unavailable;
+    if (!online.hidden) {
+      fill(online, [icon("people"), reps + " online"]);
+      online.title = reps === 1 && lead() ? "Nur du bist gerade aktiv" : (reps === 1 ? "1 Rep" : reps + " Reps") + " gerade aktiv" + (lead() ? ", du eingeschlossen" : "");
+    }
     var user = $("user");
     fill(user, [S.email || "Angemeldet", icon("caret")]);
     user.setAttribute("aria-expanded", S.menuOpen ? "true" : "false");
@@ -763,7 +772,7 @@
       var last = ranges[ranges.length - 1];
       if (last && last[1] === h) last[1] = h + 1; else ranges.push([h, h + 1]);
     });
-    var slotText = ranges.map(function (x) { return x[0] + " bis " + x[1] + " Uhr"; }).join(", ");
+    var slotText = ranges.length ? ranges.map(function (x) { return x[0] + " bis " + x[1]; }).join(", ") + " Uhr" : "";
     var slotNow = slots.indexOf(nowHour) >= 0;
     var chip = function (cls, kindChildren, time) {
       return el("span", { class: "tl-avail" + (cls ? " tl-avail--" + cls : "") }, [el("span", { class: "tl-avail__kind" }, kindChildren), el("span", { class: "tl-avail__time", text: time })]);
@@ -777,8 +786,26 @@
       return [chip("date", [icon("calendar"), dayLabel(at)], fmt.time(at)), sub || "Fester Termin, " + inMinutes(at.getTime() - now)];
     }
     if (slotText) {
-      if (slotNow) return [chip("now", [el("span", { class: "tl-dot tl-dot--live" }), "Täglich"], slotText + ", jetzt"), "Jeden Tag, ohne Datum"];
-      return [chip(null, [icon("repeat"), "Täglich"], slotText), "Jeden Tag, ohne Datum"];
+      var kind = slotNow ? [el("span", { class: "tl-dot tl-dot--live" }), "Täglich"] : [icon("repeat"), "Täglich"];
+      if (ranges.length === 1) return [chip(slotNow ? "now" : null, kind, slotText + (slotNow ? ", jetzt" : "")), "Jeden Tag, ohne Datum"];
+      // Several ranges: day strip from 9 to 18 Uhr (lead_anruf_erreichbarkeit has no other hours), the current range teal, a line for now.
+      var pct = function (hour) { return Math.max(0, Math.min(100, (hour - 9) / 9 * 100)); };
+      var d = new Date(), nowPos = d.getHours() + d.getMinutes() / 60;
+      var bars = ranges.filter(function (x) { return x[1] > 9 && x[0] < 18; }).map(function (x) {
+        return el("span", { class: nowHour >= x[0] && nowHour < x[1] ? "cur" : "", style: "left:" + pct(x[0]).toFixed(1) + "%;width:" + (pct(x[1]) - pct(x[0])).toFixed(1) + "%" });
+      });
+      if (nowPos >= 9 && nowPos <= 18) bars.push(el("b", { style: "left:" + pct(nowPos).toFixed(1) + "%", title: "Jetzt" }));
+      var current = ranges.filter(function (x) { return nowHour >= x[0] && nowHour < x[1]; })[0];
+      var next = ranges.filter(function (x) { return x[0] > nowHour; })[0];
+      var hint = current ? "Jetzt erreichbar bis " + current[1] + " Uhr"
+        : next ? "Nächstes Zeitfenster ab " + next[0] + " Uhr"
+        : "Nächstes Zeitfenster morgen ab " + ranges[0][0] + " Uhr";
+      var label = "Erreichbar täglich " + ranges.map(function (x) { return x[0] + " bis " + x[1] + " Uhr"; }).join(", ");
+      return [el("div", null, [
+        chip(slotNow ? "now" : null, kind, slotText),
+        el("div", { class: "tl-daybar", role: "img", "aria-label": label }, bars),
+        el("div", { class: "tl-daybar__scale", "aria-hidden": "true" }, ["9", "12", "15", "18"].map(function (t) { return el("span", { text: t }); })),
+      ]), hint];
     }
     return [el("span", { class: "tl-avail tl-avail--none" }, [el("span", { class: "tl-avail__time", style: "padding-left:0", text: "Keine Angabe" })]), null];
   }
@@ -852,8 +879,9 @@
       ? el("div", { class: "tl-actions tl-actions--warn", role: "region", "aria-label": "Aktionen" }, [
           el("div", { class: "tl-actions__info" }, ["Termin mit " + (meeting.guest || meeting.title || "Kunde") + " " + inMinutes(new Date(meeting.start_at) - Date.now()),
             el("small", { text: "Ein neuer Lead wäre " + (settings().lease_minutes || 10) + " Min für dich reserviert." })]),
-          el("button", { class: "tl-btn", type: "button", disabled: S.busy, onclick: function () { finish(false); } }, ["Trotzdem nächster Lead"]),
-          el("button", { class: "tl-btn tl-btn--primary", type: "button", disabled: S.busy, onclick: function () { finish(true); } }, ["Erledigt, Pause bis zum Termin"]),
+          el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip }, ["Überspringen ", el("kbd", { text: "S" })]),
+          el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Lead erledigt, trotzdem den nächsten holen.", onclick: function () { finish(false); } }, ["Erledigt, weiter"]),
+          el("button", { class: "tl-btn tl-btn--primary", type: "button", style: "flex:1", disabled: S.busy, onclick: function () { finish(true); } }, ["Erledigt, Pause bis Termin"]),
         ])
       : el("div", { class: "tl-actions", role: "region", "aria-label": "Aktionen" }, [
           el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip }, ["Überspringen (nicht angerufen) ", el("kbd", { text: "S" })]),
