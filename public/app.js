@@ -14,6 +14,7 @@
     { key: "reachable", label: "Derzeit erreichbar", cls: "reach" },
     { key: "hot_leads", label: "Heißer Lead", cls: "hot" },
     { key: "backlog", label: "Altbestand", cls: "backlog" },
+    { key: "called_today", label: "Heute angerufen", cls: "called" },
   ];
   var TASK_TYPES = { CALL: "Anruf", EMAIL: "E-Mail", TODO: "Aufgabe", SMS: "SMS", LINKED_IN: "LinkedIn", MEETING: "Termin" };
   var AGE_PRESETS = [

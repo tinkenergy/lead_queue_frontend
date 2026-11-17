@@ -88,3 +88,9 @@ button { font: inherit; }
 .tl-meet--now { background: var(--reach-soft); }
 .tl-meet--now .tl-meet__time, .tl-meet--now .tl-meet__sub { color: var(--reach); }
 .tl-meet--missed .tl-meet__guest, .tl-meet--missed .tl-meet__time { color: var(--ink-muted); text-decoration: line-through; }
+
+/* "Heute angerufen" (called_today): young leads already called today; not in the design
+   system's five group colors, so a quiet grey that sits apart from Altbestand's slate */
+.tl-badge--called { background: var(--surface-200); color: var(--ink-label); }
+.tl-card--called::before { background: var(--ink-muted); }
+.g-called { background: var(--surface-200); }

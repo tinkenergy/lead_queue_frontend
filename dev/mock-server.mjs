@@ -17,7 +17,7 @@ const LEASE = Number(process.env.MOCK_LEASE_SECONDS || 600) * 1000;
 const PUBLIC = fileURLToPath(new URL("../public/", import.meta.url));
 const EMAIL = "anna@tink.io";
 const MAX_CALLS = 4;
-const GROUPS = ["new_leads", "evening_retry", "reachable", "hot_leads", "backlog"];
+const GROUPS = ["new_leads", "evening_retry", "reachable", "hot_leads", "backlog", "called_today"];
 const SOURCES = [
   { value: "Uplane_Lead", label: "Uplane" },
   { value: "Website_Ersparnis", label: "Webseite Ersparnis" },
@@ -51,6 +51,7 @@ const leads = [
   mkLead("501", "Martina Hölscher", "new_leads", { calls: 0, last: null, age: 1, override: { stage: "01 | Neu", stage_id: "new-stage-id" } }),
   mkLead("502", "Jana Beispiel", "hot_leads", { calls: 1, age: 4, slots: [{ start: "18:00", end: "19:00" }] }),
   mkLead("503", "Ralf Opp", "backlog", { calls: 3, age: 40 }),
+  mkLead("506", "Petra Lindner", "called_today", { calls: 1, age: 0, last: 1 / 24 }),
   mkLead("504", "Karin Melcher", "backlog", { calls: 2, age: 22, callback: iso(now() - 3 * 3600000) }),
   mkLead("505", "Sabine Ortmann", null, { calls: 1, age: 6, callback: iso(hourStart() + 2 * 3600000 + 30 * 60000) }),
 ];
