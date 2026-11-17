@@ -6,13 +6,28 @@
 
 import { verifyAccessJwt } from "./access.js";
 
+// The lead queue v2 routes (reonic-sync-api, spec "Lead queue v2"). Each answers with the
+// rep's whole state, except /pulse, /meetings, /filters/preview, /tasks and /skips/reset.
 const ROUTES = [
-  { method: "POST", pattern: /^\/api\/next$/, upstream: () => "/next" },
-  { method: "GET", pattern: /^\/api\/me$/, upstream: () => "/me" },
-  { method: "GET", pattern: /^\/api\/stats$/, upstream: () => "/stats" },
-  { method: "POST", pattern: /^\/api\/leads\/(\d+)\/extend$/, upstream: (m) => `/leads/${m[1]}/extend` },
-  { method: "POST", pattern: /^\/api\/leads\/(\d+)\/release$/, upstream: (m) => `/leads/${m[1]}/release` },
+  { method: "GET", pattern: /^\/api\/state$/, upstream: () => "/state" },
+  { method: "GET", pattern: /^\/api\/pulse$/, upstream: () => "/pulse" },
+  { method: "GET", pattern: /^\/api\/meetings$/, upstream: () => "/meetings" },
+  { method: "POST", pattern: /^\/api\/lead$/, upstream: () => "/lead" },
+  {
+    method: "POST",
+    pattern: /^\/api\/lead\/(done|skip|extend|expire|leave|reclaim|undo)$/,
+    upstream: (m) => `/lead/${m[1]}`,
+  },
+  { method: "POST", pattern: /^\/api\/(pause|resume|logout)$/, upstream: (m) => `/${m[1]}` },
+  { method: "POST", pattern: /^\/api\/filters\/preview$/, upstream: () => "/filters/preview" },
+  { method: "PUT", pattern: /^\/api\/filters$/, upstream: () => "/filters" },
+  { method: "DELETE", pattern: /^\/api\/filters$/, upstream: () => "/filters" },
+  { method: "PATCH", pattern: /^\/api\/tasks\/(\d+)$/, upstream: (m) => `/tasks/${m[1]}` },
+  { method: "POST", pattern: /^\/api\/skips\/reset$/, upstream: () => "/skips/reset" },
 ];
+
+/** Methods whose request body is forwarded. */
+const WITH_BODY = new Set(["POST", "PUT", "PATCH"]);
 
 /** Returns the lead-queue API path for a browser request, or null when it isn't forwarded. */
 export function upstreamPath(method, pathname) {
@@ -68,7 +83,7 @@ export default {
     if (!path) return json({ detail: "Nicht gefunden." }, 404);
     if (!env.LEAD_QUEUE_API_KEY) return json({ detail: "Die Lead-Warteschlange ist nicht eingerichtet." }, 503);
 
-    const body = request.method === "POST" ? (await request.text()) || "{}" : undefined;
+    const body = WITH_BODY.has(request.method) ? (await request.text()) || "{}" : undefined;
     let upstream;
     try {
       upstream = await fetch(`${env.API_BASE_URL}/v1/lead-queue${path}`, {

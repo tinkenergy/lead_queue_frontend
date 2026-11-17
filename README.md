@@ -4,33 +4,53 @@ The calling page for sales reps: one lead at a time from the shared lead queue o
 [reonic-sync-api](https://github.com/tinkenergy/reonic_sync_api) (`/v1/lead-queue`).
 
 - **`public/`**: the page (plain HTML, CSS and JavaScript, no build step).
+  - `tokens.css` is generated from the design system's `tokens.json` and `tl.css` is its
+    component stylesheet, both from the **tink Lead-Queue** design system (Artifact
+    https://claude.ai/artifact/UgUT3KkMuqg3xoMZpeWuuc). `app.css` only lays them out.
+  - `app.js` is the page: a thin client of the lead queue v2 API.
 - **`src/worker.js`**: a Cloudflare Worker that serves the page and proxies `/api/*` to the
   API. It adds `X-API-Key` (Worker secret `LEAD_QUEUE_API_KEY`) and `X-User-Email` (the rep,
   from the Cloudflare Access login) to every request. The browser never sees the key.
 - **`src/access.js`**: checks the Access login token (`Cf-Access-Jwt-Assertion`) against the
   team's signing keys, the application's audience tag and the issuer.
+- **`dev/mock-server.mjs`**: a local stand-in for the API with made-up data, to look at every
+  screen without HubSpot (`npm run mock`).
 
-Only these routes are forwarded: `POST /api/next`, `GET /api/me`, `GET /api/stats`,
-`POST /api/leads/{id}/extend`, `POST /api/leads/{id}/release`. `GET /api/session` returns the
-signed-in email. Everything else under `/api` answers 404.
+Forwarded routes (the API's lead queue v2, spec "Lead queue v2" in reonic-sync-api):
+`GET /api/state`, `GET /api/pulse`, `GET /api/meetings`, `POST /api/lead`,
+`POST /api/lead/{done,skip,extend,expire,leave,reclaim,undo}`, `POST /api/{pause,resume,logout}`,
+`POST /api/filters/preview`, `PUT /api/filters`, `DELETE /api/filters`,
+`PATCH /api/tasks/{id}`, `POST /api/skips/reset`. `GET /api/session` returns the signed-in
+email. Everything else under `/api` answers 404. The API needs the v2 routes (branch
+`development` of reonic-sync-api or later).
 
 ## How the page behaves
 
-The page is in German.
+The page is in German and follows the design system's Fokus layout (version A).
 
-- **Lead holen / Nächster Lead**: reserves the next lead (`previous_outcome: done`, so the
-  previous lead is held back for the cooldown). **Skip (nicht angerufen)** returns the current
-  lead at once; the API doesn't give it to the same rep again for a while.
-- **Timer**: the lead is reserved until `lease.return_at`. From `lease.warn_at` the page asks
-  "Noch dran?" with **Behalten** (extends the reservation). At `return_at` it returns the lead
-  itself. All times come from the API (`LEAD_QUEUE_*` settings there), none are set here.
-- **Reload / second tab**: `GET /api/me` shows the same lead. Closing the tab sends
-  `release: unload`; the API keeps the lead for a short grace period so a reload gets it back.
-- **Inaktiv**: returns the current lead (with the cooldown) and goes back to the start page.
-- **Logout**: returns the current lead like "Inaktiv", then opens `/cdn-cgi/access/logout`,
-  which ends the Cloudflare Access login (for all Access apps) and deletes its cookie, e.g.
-  to switch to another Google account.
-- Clicking the card opens the contact in HubSpot.
+- **Every action answers with the whole state**, so the page redraws from any answer. A light
+  refresh (`/pulse`, every 60 s) keeps the queue counts, daily stats, callbacks and status
+  current; meetings refresh every 15 minutes. Both intervals come from the API's
+  `settings.refresh`, and both pause while the tab is hidden.
+- **Lead holen / Erledigt, nächster Lead / Überspringen (nicht angerufen)**: `POST /lead`,
+  `/lead/done`, `/lead/skip`. After Erledigt a toast offers "Rückgängig" for 5 seconds
+  (`/lead/undo`). When a mail reminder is due, the popup comes first and "Verstanden" gets
+  the next lead.
+- **Timer**: counts down to `reservation.return_at`; from `warn_at` "Noch dran?" with
+  **Behalten**; at `return_at` the page sends `/lead/expire` and offers **Zurückholen**.
+  Clicking the name opens HubSpot and extends the reservation (`reason: hubspot_opened`).
+- **Meeting soon**: when a meeting starts within the reservation length, the action bar
+  offers "Erledigt, Pause bis zum Termin" and "Trotzdem nächster Lead".
+- **Filters**: quick filters, Gruppe, Quelle, Anrufe, Lead-Alter; the panels show counts from
+  `/filters/preview` before applying, and filters are saved per rep on the server.
+- **Aufgaben in HubSpot**: ticking completes the task in HubSpot, unticking reopens it.
+- **Heute**: today's meetings and today's callbacks (Discovery Calls), by time.
+- **Pause**, **Übersprungene zurückholen**, **Tastenkürzel** and **Abmelden** (returns the
+  lead, then `/cdn-cgi/access/logout`) are in the header and the user menu.
+- **Reload / second tab**: `GET /state` shows the same lead. Closing the tab sends
+  `/lead/leave`; the API keeps the lead for a short grace period so a reload gets it back.
+- **Keyboard**: `N` Erledigt (or Lead holen), `S` Überspringen, `B` Behalten, `F` Filter,
+  `1` to `9` tick a task, `Esc` closes panels.
 
 ## Local development
 
@@ -38,6 +58,7 @@ The page is in German.
 npm install
 cp .dev.vars.example .dev.vars   # fill in DEV_USER_EMAIL and LEAD_QUEUE_API_KEY
 npm run dev                      # http://localhost:8787
+npm run mock                     # http://localhost:8790, no Worker, no API, made-up data
 npm test
 ```
 

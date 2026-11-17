@@ -1,0 +1,80 @@
+/* tink Lead-Queue — generated from the design system's tokens.json (light, dark). */
+:root {
+  color-scheme: light dark;
+  --surface-100: #eff1ec;
+  --surface-0: #ffffff;
+  --surface-200: #e4e8e2;
+  --line: #d9dfda;
+  --ink: #15223b;
+  --ink-label: #3a4352;
+  --ink-muted: #566070;
+  --accent: #007f55;
+  --accent-hover: #006a47;
+  --accent-text: #006e49;
+  --accent-soft: #dcefe5;
+  --on-accent: #ffffff;
+  --sun: #ffc93c;
+  --sun-soft: #fff3cf;
+  --new: #5a3fc0;
+  --new-soft: #ece8fb;
+  --evening: #a14a06;
+  --evening-soft: #fdeedb;
+  --follow: #2f5590;
+  --follow-soft: #e3ebf7;
+  --reach: #0b6e79;
+  --reach-soft: #d9f0f2;
+  --hot: #c4161c;
+  --hot-soft: #fde3e1;
+  --backlog: #4a5462;
+  --backlog-soft: #e6e9ec;
+  --danger: #b42318;
+  --danger-soft: #fde8e5;
+  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 24px;
+  --radius-pill: 999px;
+  --shadow-card: 0 1px 2px rgba(21,34,59,0.06), 0 8px 24px rgba(21,34,59,0.06);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface-100: #111513;
+    --surface-0: #1a1f1c;
+    --surface-200: #232925;
+    --line: #2e3531;
+    --ink: #eef1ee;
+    --ink-label: #c3cac5;
+    --ink-muted: #a2aba5;
+    --accent: #007f55;
+    --accent-hover: #00956a;
+    --accent-text: #43c895;
+    --accent-soft: #163428;
+    --on-accent: #ffffff;
+    --sun: #ffc93c;
+    --sun-soft: #3a3115;
+    --new: #b9a6ff;
+    --new-soft: #2a2247;
+    --evening: #f0a35c;
+    --evening-soft: #3b2814;
+    --follow: #8fb2ea;
+    --follow-soft: #1b2a42;
+    --reach: #5fd0dc;
+    --reach-soft: #13363a;
+    --hot: #ff7b72;
+    --hot-soft: #45161a;
+    --backlog: #b3bcc6;
+    --backlog-soft: #262c33;
+    --danger: #ff8a7e;
+    --danger-soft: #3d1a17;
+    --shadow-card: 0 1px 2px rgba(0,0,0,0.4);
+  }
+}

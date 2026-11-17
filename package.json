@@ -7,7 +7,8 @@
   "scripts": {
     "dev": "wrangler dev --local-upstream localhost:8787",
     "deploy": "wrangler deploy",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "mock": "node dev/mock-server.mjs"
   },
   "devDependencies": {
     "wrangler": "4.148.0"

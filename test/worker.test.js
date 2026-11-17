@@ -86,19 +86,34 @@ describe("verifyAccessJwt", () => {
 });
 
 describe("upstreamPath", () => {
-  it("forwards only the lead-queue routes", () => {
-    assert.equal(upstreamPath("POST", "/api/next"), "/next");
-    assert.equal(upstreamPath("GET", "/api/me"), "/me");
-    assert.equal(upstreamPath("GET", "/api/stats"), "/stats");
-    assert.equal(upstreamPath("POST", "/api/leads/123/extend"), "/leads/123/extend");
-    assert.equal(upstreamPath("POST", "/api/leads/123/release"), "/leads/123/release");
+  it("forwards the lead queue v2 routes", () => {
+    assert.equal(upstreamPath("GET", "/api/state"), "/state");
+    assert.equal(upstreamPath("GET", "/api/pulse"), "/pulse");
+    assert.equal(upstreamPath("GET", "/api/meetings"), "/meetings");
+    assert.equal(upstreamPath("POST", "/api/lead"), "/lead");
+    for (const action of ["done", "skip", "extend", "expire", "leave", "reclaim", "undo"]) {
+      assert.equal(upstreamPath("POST", `/api/lead/${action}`), `/lead/${action}`);
+    }
+    for (const action of ["pause", "resume", "logout"]) {
+      assert.equal(upstreamPath("POST", `/api/${action}`), `/${action}`);
+    }
+    assert.equal(upstreamPath("POST", "/api/filters/preview"), "/filters/preview");
+    assert.equal(upstreamPath("PUT", "/api/filters"), "/filters");
+    assert.equal(upstreamPath("DELETE", "/api/filters"), "/filters");
+    assert.equal(upstreamPath("PATCH", "/api/tasks/981"), "/tasks/981");
+    assert.equal(upstreamPath("POST", "/api/skips/reset"), "/skips/reset");
   });
 
   it("forwards nothing else", () => {
-    assert.equal(upstreamPath("GET", "/api/next"), null);
+    assert.equal(upstreamPath("POST", "/api/state"), null);
+    assert.equal(upstreamPath("GET", "/api/lead"), null);
     assert.equal(upstreamPath("POST", "/api/sync"), null);
-    assert.equal(upstreamPath("POST", "/api/leads/../sync/extend"), null);
-    assert.equal(upstreamPath("POST", "/api/leads/1/extend/x"), null);
+    assert.equal(upstreamPath("GET", "/api/stats"), null);
+    assert.equal(upstreamPath("POST", "/api/next"), null);
+    assert.equal(upstreamPath("POST", "/api/lead/sync"), null);
+    assert.equal(upstreamPath("PATCH", "/api/tasks/../sync"), null);
+    assert.equal(upstreamPath("PATCH", "/api/tasks/1/x"), null);
+    assert.equal(upstreamPath("GET", "/api/filters"), null);
   });
 });
 
@@ -133,7 +148,7 @@ describe("fetch handler", () => {
     try {
       resetAccessCache();
       const env = { ACCESS_TEAM_DOMAIN: TEAM, ACCESS_AUD: AUD, LEAD_QUEUE_API_KEY: "k", API_BASE_URL: "https://api" };
-      const response = await worker.fetch(new Request("https://leads.tinkenergy.dev/api/next", { method: "POST" }), env);
+      const response = await worker.fetch(new Request("https://leads.tinkenergy.dev/api/lead", { method: "POST" }), env);
       assert.equal(response.status, 401);
       assert.equal(called, false);
     } finally {
@@ -150,13 +165,35 @@ describe("fetch handler", () => {
     };
     try {
       const env = { ALLOW_DEV_USER: "true", DEV_USER_EMAIL: "anna@tink.io", LEAD_QUEUE_API_KEY: "secret", API_BASE_URL: "https://api" };
-      const request = new Request("http://localhost:8787/api/next", { method: "POST", body: '{"previous_outcome":"done"}' });
+      const request = new Request("http://localhost:8787/api/lead/done", { method: "POST", body: '{"lead_id":"500"}' });
       const response = await worker.fetch(request, env);
       assert.equal(response.status, 200);
-      assert.equal(sent.url, "https://api/v1/lead-queue/next");
+      assert.equal(sent.url, "https://api/v1/lead-queue/lead/done");
       assert.equal(sent.init.headers["X-API-Key"], "secret");
       assert.equal(sent.init.headers["X-User-Email"], "anna@tink.io");
-      assert.equal(sent.init.body, '{"previous_outcome":"done"}');
+      assert.equal(sent.init.body, '{"lead_id":"500"}');
+    } finally {
+      globalThis.fetch = original;
+    }
+  });
+
+  it("forwards the body of PUT and PATCH, and none for DELETE", async () => {
+    const original = globalThis.fetch;
+    const sent = [];
+    globalThis.fetch = async (url, init) => {
+      sent.push({ url, init });
+      return new Response("{}", { headers: { "Content-Type": "application/json" } });
+    };
+    try {
+      const env = { ALLOW_DEV_USER: "true", DEV_USER_EMAIL: "anna@tink.io", LEAD_QUEUE_API_KEY: "secret", API_BASE_URL: "https://api" };
+      await worker.fetch(new Request("http://localhost:8787/api/filters", { method: "PUT", body: '{"filters":{}}' }), env);
+      await worker.fetch(new Request("http://localhost:8787/api/tasks/9", { method: "PATCH", body: '{"done":true}' }), env);
+      await worker.fetch(new Request("http://localhost:8787/api/filters", { method: "DELETE" }), env);
+      assert.deepEqual(sent.map((s) => [s.init.method, s.url, s.init.body]), [
+        ["PUT", "https://api/v1/lead-queue/filters", '{"filters":{}}'],
+        ["PATCH", "https://api/v1/lead-queue/tasks/9", '{"done":true}'],
+        ["DELETE", "https://api/v1/lead-queue/filters", undefined],
+      ]);
     } finally {
       globalThis.fetch = original;
     }

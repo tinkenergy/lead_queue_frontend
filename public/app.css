@@ -1,0 +1,80 @@
+/* Page layout and the few pieces the design system's tl.css leaves to the page.
+   Colors, type and components come from tokens.css and tl.css (the tink Lead-Queue
+   design system); this file only places them. */
+
+html, body { margin: 0; min-height: 100%; background: var(--surface-100); }
+body.tl { font-size: 16px; line-height: 24px; }
+button { font: inherit; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.lq-page { max-width: 1376px; margin: 0 auto; padding: 28px 48px 40px; }
+
+/* Header: logo, daily goal pill, pause, user menu */
+.lq-top { flex-wrap: wrap; }
+.lq-stats { flex: 1; max-width: 600px; }
+.lq-stats .tl-panel { padding: 10px 20px; border-radius: 999px; }
+.lq-top__right { margin-left: auto; }
+.lq-menuwrap { position: relative; }
+.lq-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; }
+.lq-shortcuts { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; }
+.lq-shortcuts dt { font: 500 14px/20px var(--font-mono); }
+.lq-shortcuts dd { margin: 0; }
+
+/* Work column and the Heute rail. One column below 1100px:
+   filters, card, action bar, Heute, tasks. */
+.lq-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  gap: 14px 24px;
+  align-items: start;
+  margin-top: 24px;
+}
+.lq-main > * { grid-column: 1; min-width: 0; }
+.lq-today { grid-column: 2; grid-row: 1 / span 6; padding-top: 48px; }
+.lq-alerts { display: grid; gap: 10px; }
+.lq-alerts:empty { display: none; }
+.lq-tasks:empty { display: none; }
+
+@media (max-width: 1279px) {
+  .lq-page { padding: 20px 28px 32px; }
+  .lq-main { grid-template-columns: minmax(0, 1fr) 280px; }
+  .lq-page .tl-name { font-size: 40px; line-height: 44px; }
+  .lq-page .tl-card { padding: 20px 24px 24px 32px; }
+}
+@media (max-width: 1099px) {
+  .lq-main { grid-template-columns: minmax(0, 1fr); }
+  .lq-today { grid-column: 1; grid-row: auto; padding-top: 0; order: 4; }
+  .lq-filters { order: 0; }
+  .lq-alerts { order: 1; }
+  .lq-slot { order: 2; }
+  .lq-actions { order: 3; }
+  .lq-tasks { order: 5; }
+}
+@media (max-width: 640px) {
+  .lq-page { padding: 16px; }
+  .lq-page .tl-fields { grid-template-columns: 1fr; }
+  .lq-page .tl-name { font-size: 32px; line-height: 36px; }
+}
+
+/* Card extras */
+.lq-card-notes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.tl-name { cursor: pointer; }
+.lq-slot .tl-big + p { margin: 0; }
+
+/* Filter popovers hang under their chip */
+.lq-chipwrap { position: relative; display: inline-flex; }
+.lq-chipwrap > .tl-pop { position: absolute; left: 0; top: calc(100% + 8px); z-index: 25; }
+.lq-chipwrap--right > .tl-pop { left: auto; right: 0; }
+.lq-opts-scroll { max-height: 320px; overflow: auto; }
+
+/* Undo toast, above the sticky action bar */
+.lq-toast { position: fixed; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 40; }
+.lq-toast:empty { display: none; }
+
+/* "Heute": meetings and callbacks in one list */
+.lq-meet__kind { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-muted); display: inline-flex; align-items: center; gap: 4px; }
+.lq-meet__kind svg { width: 12px; height: 12px; }
+.tl-meet--now { background: var(--reach-soft); }
+.tl-meet--now .tl-meet__time, .tl-meet--now .tl-meet__sub { color: var(--reach); }
+.tl-meet--missed .tl-meet__guest, .tl-meet--missed .tl-meet__time { color: var(--ink-muted); text-decoration: line-through; }
