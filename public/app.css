@@ -10,11 +10,18 @@ button { font: inherit; }
 
 .lq-page { max-width: 1376px; margin: 0 auto; padding: 28px 48px 40px; }
 
-/* Header: logo, daily goal pill, pause, user menu */
-.lq-top { flex-wrap: wrap; }
-.lq-stats { flex: 1; max-width: 600px; }
+/* Header: logo, daily goal pill (centered on the page), pause, user menu */
+.lq-top { display: grid; grid-template-columns: 1fr minmax(0, 600px) 1fr; }
+.lq-top > .tl-logo { justify-self: start; }
+.lq-stats { min-width: 0; }
 .lq-stats .tl-panel { padding: 10px 20px; border-radius: 999px; }
-.lq-top__right { margin-left: auto; }
+.lq-top__right { justify-self: end; }
+@media (max-width: 899px) {
+  .lq-top { grid-template-columns: auto 1fr; grid-template-areas: "logo right" "stats stats"; }
+  .lq-top > .tl-logo { grid-area: logo; }
+  .lq-top__right { grid-area: right; }
+  .lq-stats { grid-area: stats; }
+}
 .lq-menuwrap { position: relative; }
 .lq-menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 30; }
 .lq-shortcuts { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; margin: 0; }
@@ -67,6 +74,9 @@ button { font: inherit; }
 .lq-chipwrap > .tl-pop { position: absolute; left: 0; top: calc(100% + 8px); z-index: 25; }
 .lq-chipwrap--right > .tl-pop { left: auto; right: 0; }
 .lq-opts-scroll { max-height: 320px; overflow: auto; }
+
+/* Popups (mail reminder, shortcuts) cover the viewport and sit above the sticky action bar */
+#modal .tl-scrim { position: fixed; z-index: 50; }
 
 /* Undo toast, above the sticky action bar */
 .lq-toast { position: fixed; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 40; }

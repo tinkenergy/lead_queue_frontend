@@ -564,6 +564,8 @@
       (p ? p.by_source : []).forEach(function (s) { counts[s.value === null ? "__none__" : s.value] = s.count; });
       var options = (settings().lead_sources || []).map(function (o) { return { value: o.value, label: o.label }; });
       options.push({ value: null, label: "Ohne Quelle" });
+      // Once the counts are in, sources without leads are left out (unless selected, so they can be unticked).
+      if (p) options = options.filter(function (o) { return counts[o.value === null ? "__none__" : o.value] || d.sources.indexOf(o.value) >= 0; });
       options.sort(function (a, b) { return (counts[b.value === null ? "__none__" : b.value] || 0) - (counts[a.value === null ? "__none__" : a.value] || 0); });
       var query = S.sourceQuery.toLowerCase();
       var shown = options.filter(function (o) { return !query || (o.label || "").toLowerCase().indexOf(query) >= 0; });
