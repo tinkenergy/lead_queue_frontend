@@ -929,7 +929,7 @@
     });
     var remaining = items.some(function (i) { return i.kind === "meeting" ? new Date(i.m.end_at || i.m.start_at).getTime() >= now : i.c.state !== "missed"; });
     var children = [el("h3", { class: "tl-panel__title" }, ["Heute ", el("small", { text: shortDay(now) })])];
-    if (meetings && meetings.status === "no_owner") children.push(el("p", { class: "tl-muted", style: "margin:0 4px 8px;font-size:14px", text: "Keine Termine: dein Login hat keinen HubSpot-Nutzer." }));
+    if (meetings && meetings.status === "no_owner") children.push(el("p", { class: "tl-muted", style: "margin:0 4px 8px;font-size:14px", text: "Kein Hubspot-Nutzer verknüpft." }));
     if (meetingNote) children.push(el("p", { class: "tl-muted", style: "margin:0 4px 8px;font-size:14px", text: meetingNote }));
     children = children.concat(rows);
     if (!remaining) children.push(el("div", { class: "tl-empty", html: ICON.calendar }, [el("b", { text: "Heute keine Termine mehr." }), el("span", { text: "Volle Zeit für Anrufe." })]));
