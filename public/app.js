@@ -534,8 +534,11 @@
     var mixTitle = GROUPS.map(function (g) { return g.label + " " + (q.available_by_group[g.key] || 0); }).join(", ") +
       ". Dazu " + plural(q.cooling_down, "Lead", "Leads") + " in Abkühlung" + (q.scheduled ? ", " + q.scheduled + " geplant" : "") + ".";
     var active = f.groups.length || f.sources.length || f.min_unreached_calls !== null || f.age;
-    var mix = el("div", { class: "tl-mix", role: "img", title: mixTitle, "aria-label": mixTitle }, GROUPS.map(function (g) {
-      return el("span", { class: "g-" + g.cls, style: "flex:" + (q.available_by_group[g.key] || 0) });
+    // Groups without leads get no segment (the bar's 3px minimum would show them anyway).
+    var mix = el("div", { class: "tl-mix", role: "img", title: mixTitle, "aria-label": mixTitle }, GROUPS.filter(function (g) {
+      return (q.available_by_group[g.key] || 0) > 0;
+    }).map(function (g) {
+      return el("span", { class: "g-" + g.cls, style: "flex:" + q.available_by_group[g.key] });
     }));
     var count = active
       ? el("span", null, [el("b", { text: String(q.matching_filters) }), " von " + plural(q.available, "Lead", "Leads")])
