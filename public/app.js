@@ -38,7 +38,9 @@
 
   // --- state --------------------------------------------------------------------------------
 
+  var PHONE = window.matchMedia("(max-width: 639px)");
   var S = {
+    mobile: PHONE.matches, // below 640px: phone layout (.tl-mobile on <body>)
     state: null, // the last LeadQueueState (or merged pulse)
     settings: null, // from GET /state
     email: "",
@@ -451,11 +453,19 @@
     var d = section.data;
     var meter = function (value, goal, sun, unit) {
       var pct = goal ? Math.min(100, Math.round((value / goal) * 100)) : 0;
-      return el("div", { class: "tl-stat", style: "flex:1" }, [
+      return el("div", { class: "tl-stat", style: S.mobile ? null : "flex:1" }, [
         el("div", { class: "tl-stat__val" }, [el("b", { text: String(value) }), "von " + goal + " " + unit]),
         el("span", { class: "tl-meter" + (sun ? " tl-meter--sun" : "") }, [el("span", { style: "width:" + pct + "%" })]),
       ]);
     };
+    if (S.mobile) {
+      fill(node, [el("div", { class: "tl-mstats" }, [
+        el("span", { class: "tl-muted", style: "font-size:12px;line-height:15px" }, ["Tagesziel", el("br"), el("b", { style: "color:var(--ink)", text: "Heute" })]),
+        meter(d.calls, d.goals.calls, false, "Anrufen"),
+        meter(d.qualified, d.goals.qualified, true, "Qualis"),
+      ])]);
+      return;
+    }
     fill(node, [el("div", { class: "tl-panel" }, [el("div", { class: "tl-stats", style: "gap:24px" }, [
       el("span", { class: "tl-muted", style: "font-size:13px;line-height:16px" }, ["Tagesziel", el("br"), el("b", { style: "color:var(--ink)", text: "Heute" })]),
       meter(d.calls, d.goals.calls, false, "Anrufen"),
@@ -474,11 +484,19 @@
     var reps = S.state && S.state.queue ? S.state.queue.active_reps : null;
     online.hidden = reps === null || reps === undefined || S.unavailable;
     if (!online.hidden) {
-      fill(online, [icon("people"), reps + " online"]);
+      fill(online, [icon("people"), S.mobile ? String(reps) : reps + " online"]);
       online.title = reps === 1 && lead() ? "Nur du bist gerade aktiv" : (reps === 1 ? "1 Rep" : reps + " Reps") + " gerade aktiv" + (lead() ? ", du eingeschlossen" : "");
     }
     var user = $("user");
-    fill(user, [S.email || "Angemeldet", icon("caret")]);
+    if (S.mobile) {
+      user.className = "tl-avatar";
+      user.setAttribute("aria-label", "Menü für " + (S.email || "dein Konto"));
+      fill(user, [(S.email || "?").charAt(0).toUpperCase()]);
+    } else {
+      user.className = "tl-user";
+      user.removeAttribute("aria-label");
+      fill(user, [S.email || "Angemeldet", icon("caret")]);
+    }
     user.setAttribute("aria-expanded", S.menuOpen ? "true" : "false");
     user.onclick = function (event) { event.stopPropagation(); S.menuOpen = !S.menuOpen; renderHeader(); };
     var menu = $("menu");
@@ -511,30 +529,38 @@
             el("button", { class: "tl-fchip__x", type: "button", "aria-label": "Filter " + name + " entfernen", onclick: function () { saveFilters(withoutDimension(f, dim)); } }, ["×"]),
           ])
         : el("button", { class: "tl-fchip", type: "button", "aria-haspopup": "dialog", "aria-expanded": open ? "true" : "false", onclick: function (e) { e.stopPropagation(); openPanel(panel); } }, [name, " ", icon("caret")]);
-      return el("span", { class: "lq-chipwrap" }, [button, open ? renderPanel(panel) : null]);
+      return el("span", { class: "lq-chipwrap" }, [button, open && !S.mobile ? renderPanel(panel) : null]);
     };
     var mixTitle = GROUPS.map(function (g) { return g.label + " " + (q.available_by_group[g.key] || 0); }).join(", ") +
       ". Dazu " + plural(q.cooling_down, "Lead", "Leads") + " in Abkühlung" + (q.scheduled ? ", " + q.scheduled + " geplant" : "") + ".";
     var active = f.groups.length || f.sources.length || f.min_unreached_calls !== null || f.age;
-    fill(node, [el("div", { class: "tl-filters", role: "toolbar", "aria-label": "Filter" }, [
+    var mix = el("div", { class: "tl-mix", role: "img", title: mixTitle, "aria-label": mixTitle }, GROUPS.map(function (g) {
+      return el("span", { class: "g-" + g.cls, style: "flex:" + (q.available_by_group[g.key] || 0) });
+    }));
+    var count = active
+      ? el("span", null, [el("b", { text: String(q.matching_filters) }), " von " + plural(q.available, "Lead", "Leads")])
+      : el("span", null, [el("b", { text: String(q.available) }), q.available === 1 ? " Lead" : " Leads"]);
+    var reset = active ? el("button", { class: "tl-link", type: "button", onclick: clearFilters }, ["Zurücksetzen"]) : null;
+    var row = el("div", { class: "tl-filters", role: "toolbar", "aria-label": "Filter" }, [
       quick("Jetzt erreichbar", "reachable"),
       quick("Heiße Leads", "hot_leads"),
       el("span", { class: "tl-filters__sep" }),
-      el("span", { class: "tl-filters__label", title: "Filter", "aria-label": "Filter", html: ICON.filter }),
+      S.mobile ? null : el("span", { class: "tl-filters__label", title: "Filter", "aria-label": "Filter", html: ICON.filter }),
       chip("groups", "Gruppe", "groups"),
       chip("sources", "Quelle", "sources"),
       chip("min_unreached_calls", "Anrufe", "calls"),
       chip("age", "Lead-Alter", "age"),
-      el("span", { class: "tl-filters__count" }, [
-        el("div", { class: "tl-mix", role: "img", title: mixTitle, "aria-label": mixTitle }, GROUPS.map(function (g) {
-          return el("span", { class: "g-" + g.cls, style: "flex:" + (q.available_by_group[g.key] || 0) });
-        })),
-        active
-          ? el("span", null, [el("b", { text: String(q.matching_filters) }), " von " + plural(q.available, "Lead", "Leads")])
-          : el("span", null, [el("b", { text: String(q.available) }), q.available === 1 ? " Lead" : " Leads"]),
-        active ? el("button", { class: "tl-link", type: "button", onclick: clearFilters }, ["Zurücksetzen"]) : null,
-      ]),
-    ])]);
+      S.mobile ? null : el("span", { class: "tl-filters__count" }, [mix, count, reset]),
+    ]);
+    if (!S.mobile) { fill(node, [row]); return; }
+    // Phone: the lead count on its own line, the chips in one sideways-scrolling row, the open
+    // panel as a bottom sheet over a dimmed page.
+    fill(node, [
+      el("div", { class: "tl-mcount" }, [el("span", null, [mix, count]), reset]),
+      row,
+      S.panel ? el("div", { class: "lq-dim", onclick: closePanel }) : null,
+      S.panel ? el("div", { class: "tl-sheet", role: "dialog", "aria-label": "Filter", onclick: function (e) { e.stopPropagation(); } }, [el("div", { class: "tl-sheet__grip" }), renderPanel(S.panel)]) : null,
+    ]);
   }
 
   function panelFoot(clearDim) {
@@ -834,11 +860,12 @@
     return el("article", { class: "tl-card tl-card--" + (g ? g.cls : "plain"), "aria-label": "Aktiver Lead" }, [
       el("div", { class: "tl-card__head" }, [
         g ? el("span", { class: "tl-badge tl-badge--" + g.cls, text: g.label }) : el("span", { class: "tl-badge tl-badge--plain", text: "Geplant" }),
-        el("span", { class: "tl-badge tl-badge--plain", text: l.stage }),
+        S.mobile ? null : el("span", { class: "tl-badge tl-badge--plain", text: l.stage }),
         timer,
       ]),
       el("a", { class: "tl-name", href: l.hubspot_url, target: "_blank", rel: "noopener", title: "Kontakt in HubSpot öffnen",
         onclick: function () { keep("hubspot_opened"); } }, [l.name || "Kontakt ohne Namen", " ", icon("link")]),
+      S.mobile && l.stage ? el("div", { class: "tl-mstage", text: l.stage }) : null,
       st.stale ? el("div", { class: "lq-card-notes" }, [el("span", { class: "tl-notice" }, [icon("clock"), "HubSpot nicht erreichbar, Stand " + (st.data_as_of ? fmt.time(st.data_as_of) : "?") + " Uhr"])]) : null,
       el("div", { class: "tl-fields" }, [
         field("Erreichbarkeit", avail[0], avail[1]),
@@ -880,14 +907,15 @@
       ? el("div", { class: "tl-actions tl-actions--warn", role: "region", "aria-label": "Aktionen" }, [
           el("div", { class: "tl-actions__info" }, ["Termin mit " + (meeting.guest || meeting.title || "Kunde") + " " + inMinutes(new Date(meeting.start_at) - Date.now()),
             el("small", { text: "Ein neuer Lead wäre " + (settings().lease_minutes || 10) + " Min für dich reserviert." })]),
-          el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip }, ["Überspringen ", el("kbd", { text: "S" })]),
-          el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Lead erledigt, trotzdem den nächsten holen.", onclick: function () { finish(false); } }, ["Erledigt, weiter"]),
-          el("button", { class: "tl-btn tl-btn--primary", type: "button", style: "flex:1", disabled: S.busy, onclick: function () { finish(true); } }, ["Erledigt, Pause bis Termin"]),
+          el("button", { class: "tl-btn", type: "button", style: S.mobile ? "flex:1" : null, disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip }, ["Überspringen ", el("kbd", { text: "S" })]),
+          el("button", { class: "tl-btn", type: "button", style: S.mobile ? "flex:1" : null, disabled: S.busy, title: "Lead erledigt, trotzdem den nächsten holen.", onclick: function () { finish(false); } }, ["Erledigt, weiter"]),
+          el("button", { class: "tl-btn tl-btn--primary", type: "button", style: S.mobile ? null : "flex:1", disabled: S.busy, onclick: function () { finish(true); } }, ["Erledigt, Pause bis Termin"]),
         ])
       : el("div", { class: "tl-actions", role: "region", "aria-label": "Aktionen" }, [
-          el("button", { class: "tl-btn", type: "button", disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip }, ["Überspringen (nicht angerufen) ", el("kbd", { text: "S" })]),
-          el("button", { class: "tl-btn tl-btn--primary", type: "button", style: "flex:1", disabled: S.busy, onclick: function () { finish(false); } },
-            [S.busy ? "Wird geladen" : "Erledigt, nächster Lead ", S.busy ? null : el("kbd", { text: "N" })]),
+          el("button", { class: "tl-btn", type: "button", style: S.mobile ? "flex:1" : null, disabled: S.busy, title: "Nicht angerufen. Der Lead geht sofort an andere zurück.", onclick: skip },
+            S.mobile ? ["Überspringen"] : ["Überspringen (nicht angerufen) ", el("kbd", { text: "S" })]),
+          el("button", { class: "tl-btn tl-btn--primary", type: "button", style: S.mobile ? "flex:1.4" : "flex:1", disabled: S.busy, onclick: function () { finish(false); } },
+            [S.busy ? "Wird geladen" : S.mobile ? "Erledigt, weiter" : "Erledigt, nächster Lead ", S.busy || S.mobile ? null : el("kbd", { text: "N" })]),
         ]);
     fill(node, [still, bar]);
   }
@@ -995,7 +1023,18 @@
         el("a", { href: r.hubspot_email_url, target: "_blank", rel: "noopener", title: "Öffnet das E-Mail-Fenster des Kontakts in HubSpot" }, ["E-Mail in HubSpot schreiben ", icon("link")])]),
       el("div", { class: "tl-modal__actions" }, [el("button", { class: "tl-btn tl-btn--primary", type: "button", id: "mr-ok", onclick: closeReminder }, ["Verstanden"])]),
     ])])]);
+    asSheet(node);
     var ok = $("mr-ok"); if (ok) ok.focus();
+  }
+
+  // Phones: popups open as bottom sheets with a grip (the scrim stays as the dimmed page).
+  function asSheet(node) {
+    if (!S.mobile) return;
+    var modal = node.querySelector(".tl-modal");
+    if (!modal) return;
+    var sheet = el("div", { class: "tl-sheet" }, [el("div", { class: "tl-sheet__grip" })]);
+    modal.parentNode.insertBefore(sheet, modal);
+    sheet.appendChild(modal);
   }
 
   function showShortcuts() {
@@ -1011,6 +1050,7 @@
       el("h2", { class: "tl-modal__title", text: "Tastenkürzel" }), dl,
       el("div", { class: "tl-modal__actions" }, [el("button", { class: "tl-btn tl-btn--primary", type: "button", onclick: close }, ["Schließen"])]),
     ])])]);
+    asSheet(node);
   }
 
   // --- the clock: timer, warning, expiry, toast countdown ------------------------------------------
@@ -1100,6 +1140,18 @@
     lastPulse = Date.now();
     loadState();
   });
+
+  // Phone layout below 640px: .tl-mobile on <body>, and a redraw when the width crosses it.
+  document.body.classList.toggle("tl-mobile", S.mobile);
+  function syncLayout() {
+    if (PHONE.matches === S.mobile) return;
+    S.mobile = PHONE.matches;
+    document.body.classList.toggle("tl-mobile", S.mobile);
+    if (S.panel) closePanel();
+    render();
+  }
+  PHONE.addEventListener("change", syncLayout);
+  window.addEventListener("resize", syncLayout); // some browsers skip the media-query event
 
   // --- start ----------------------------------------------------------------------------------------
 

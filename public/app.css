@@ -16,7 +16,7 @@ button { font: inherit; }
 .lq-stats { min-width: 0; }
 .lq-stats .tl-panel { padding: 10px 20px; border-radius: 999px; }
 .lq-top__right { justify-self: end; }
-@media (max-width: 899px) {
+@media (max-width: 1099px) {
   .lq-top { grid-template-columns: auto 1fr; grid-template-areas: "logo right" "stats stats"; }
   .lq-top > .tl-logo { grid-area: logo; }
   .lq-top__right { grid-area: right; }
@@ -29,7 +29,7 @@ button { font: inherit; }
 .lq-shortcuts dd { margin: 0; }
 
 /* Work column and the Heute rail. One column below 1100px:
-   filters, card, action bar, Heute, tasks. */
+   filters, card, action bar, Aufgaben, Heute (the tasks belong to the lead). */
 .lq-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 320px;
@@ -51,18 +51,32 @@ button { font: inherit; }
 }
 @media (max-width: 1099px) {
   .lq-main { grid-template-columns: minmax(0, 1fr); }
-  .lq-today { grid-column: 1; grid-row: auto; padding-top: 0; order: 4; }
+  .lq-today { grid-column: 1; grid-row: auto; padding-top: 0; order: 5; }
   .lq-filters { order: 0; }
   .lq-alerts { order: 1; }
   .lq-slot { order: 2; }
   .lq-actions { order: 3; }
-  .lq-tasks { order: 5; }
+  .lq-tasks { order: 4; }
 }
-@media (max-width: 640px) {
-  .lq-page { padding: 16px; }
-  .lq-page .tl-fields { grid-template-columns: 1fr; }
-  .lq-page .tl-name { font-size: 32px; line-height: 36px; }
-}
+
+/* Phones (below 640px): app.js puts .tl-mobile on <body>; the phone rules of tl.css apply.
+   These only fit the page's own containers to them. */
+.tl-mobile .lq-page { padding: 14px 16px 0; }
+/* the laptop rules above (.lq-page .tl-name, .lq-page .tl-card) would win otherwise */
+.tl-mobile .lq-page .tl-name { font-size: 32px; line-height: 36px; }
+.tl-mobile .lq-page .tl-card { padding: 16px 18px 20px 24px; }
+.tl-mobile .lq-top { row-gap: 12px; }
+.tl-mobile .lq-main { margin-top: 12px; }
+.tl-mobile .lq-filters { display: grid; gap: 10px; }
+.tl-mobile .lq-today { padding-top: 0; }
+.tl-mobile .tl-fields > :last-child { grid-column: 1 / -1; }
+.tl-mobile .lq-slot .tl-btn--primary { width: 100%; }
+.tl-mobile .lq-toast { bottom: 104px; width: max-content; max-width: calc(100% - 32px); }
+.tl-mobile .lq-opts-scroll { max-height: 45vh; }
+/* Bottom sheets: a dimmed page behind, the sheet above the fixed action bar */
+.lq-dim { position: fixed; inset: 0; z-index: 5; background: rgba(17,21,19,0.45); }
+.tl-mobile #modal .tl-scrim { padding: 0; }
+.tl-mobile .tl-sheet { max-height: 85vh; overflow: auto; }
 
 /* Card extras */
 .lq-card-notes { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
@@ -88,9 +102,3 @@ button { font: inherit; }
 .tl-meet--now { background: var(--reach-soft); }
 .tl-meet--now .tl-meet__time, .tl-meet--now .tl-meet__sub { color: var(--reach); }
 .tl-meet--missed .tl-meet__guest, .tl-meet--missed .tl-meet__time { color: var(--ink-muted); text-decoration: line-through; }
-
-/* "Heute angerufen" (called_today): young leads already called today; not in the design
-   system's five group colors, so a quiet grey that sits apart from Altbestand's slate */
-.tl-badge--called { background: var(--surface-200); color: var(--ink-label); }
-.tl-card--called::before { background: var(--ink-muted); }
-.g-called { background: var(--surface-200); }
