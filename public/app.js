@@ -818,13 +818,13 @@
     if (slotText) {
       var kind = slotNow ? [el("span", { class: "tl-dot tl-dot--live" }), "Täglich"] : [icon("repeat"), "Täglich"];
       if (ranges.length === 1) return [chip(slotNow ? "now" : null, kind, slotText + (slotNow ? ", jetzt" : "")), "Jeden Tag, ohne Datum"];
-      // Several ranges: day strip from 9 to 18 Uhr (lead_anruf_erreichbarkeit has no other hours), the current range teal, a line for now.
-      var pct = function (hour) { return Math.max(0, Math.min(100, (hour - 9) / 9 * 100)); };
+      // Several ranges: day strip from 9 to 19 Uhr (lead_anruf_erreichbarkeit has no other hours), the current range teal, a line for now.
+      var pct = function (hour) { return Math.max(0, Math.min(100, (hour - 9) / 10 * 100)); };
       var d = new Date(), nowPos = d.getHours() + d.getMinutes() / 60;
-      var bars = ranges.filter(function (x) { return x[1] > 9 && x[0] < 18; }).map(function (x) {
+      var bars = ranges.filter(function (x) { return x[1] > 9 && x[0] < 19; }).map(function (x) {
         return el("span", { class: nowHour >= x[0] && nowHour < x[1] ? "cur" : "", style: "left:" + pct(x[0]).toFixed(1) + "%;width:" + (pct(x[1]) - pct(x[0])).toFixed(1) + "%" });
       });
-      if (nowPos >= 9 && nowPos <= 18) bars.push(el("b", { style: "left:" + pct(nowPos).toFixed(1) + "%", title: "Jetzt" }));
+      if (nowPos >= 9 && nowPos <= 19) bars.push(el("b", { style: "left:" + pct(nowPos).toFixed(1) + "%", title: "Jetzt" }));
       var current = ranges.filter(function (x) { return nowHour >= x[0] && nowHour < x[1]; })[0];
       var next = ranges.filter(function (x) { return x[0] > nowHour; })[0];
       var hint = current ? "Jetzt erreichbar bis " + current[1] + " Uhr"
@@ -834,7 +834,7 @@
       return [el("div", null, [
         chip(slotNow ? "now" : null, kind, slotText),
         el("div", { class: "tl-daybar", role: "img", "aria-label": label }, bars),
-        el("div", { class: "tl-daybar__scale", "aria-hidden": "true" }, ["9", "12", "15", "18"].map(function (t) { return el("span", { text: t }); })),
+        el("div", { class: "tl-daybar__scale", "aria-hidden": "true" }, ["9", "11", "13", "15", "17", "19"].map(function (t) { return el("span", { text: t }); })),
       ]), hint];
     }
     return [el("span", { class: "tl-avail tl-avail--none" }, [el("span", { class: "tl-avail__time", style: "padding-left:0", text: "Keine Angabe" })]), null];
