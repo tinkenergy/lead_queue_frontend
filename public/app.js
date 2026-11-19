@@ -1026,11 +1026,22 @@
       ]);
     });
     var bestText = BEST_HOURS.slice(0, -1).join(", ") + " und " + BEST_HOURS[BEST_HOURS.length - 1] + " Uhr";
+    // Current time: a thin line at the exact minute inside the chart (columns are 1/11 of the width
+    // minus ten 4px gaps) and the current hour label in bold. Only between 8 and 19 Uhr; renderToday
+    // runs every 30 seconds, so the line follows the clock.
+    var d = new Date(), nowHour = fmt.hour(d); // the page's time zone, like the rest of the page
+    var inDay = nowHour >= REACH_FIRST && nowHour <= REACH_LAST;
+    var nowText = fmt.time(d), nowMinute = parseInt(nowText.split(":")[1], 10);
+    if (inDay) {
+      var offset = nowHour - REACH_FIRST;
+      cols.push(el("i", { class: "tl-rh__now", title: "Jetzt, " + nowText + " Uhr",
+        style: "left:calc((100% - 40px) / 11 * " + (offset + nowMinute / 60).toFixed(4) + " + " + (offset * 4) + "px)" }));
+    }
     return el("section", { class: "tl-panel tl-rh", "aria-label": "Erreichbarkeit Heute" }, [
       el("h3", { class: "tl-rh__title", text: "Erreichbarkeit Heute" }),
       el("p", { class: "tl-rh__line" }, [el("i", { class: "tl-rh__sw" }), "Statistisch höchste Annahmequote"]),
-      el("div", { class: "tl-rh__chart", role: "img", "aria-label": "Leads mit Wunschzeit pro Stunde von " + REACH_FIRST + " bis " + (REACH_LAST + 1) + " Uhr. Blau hinterlegt: statistisch höchste Annahmequote, " + bestText }, cols),
-      el("div", { class: "tl-rh__scale", "aria-hidden": "true" }, hours.map(function (hour) { return el("span", { class: best(hour) ? "best" : "", text: String(hour) }); })),
+      el("div", { class: "tl-rh__chart", role: "img", "aria-label": "Leads mit Wunschzeit pro Stunde von " + REACH_FIRST + " bis " + (REACH_LAST + 1) + " Uhr. Blau hinterlegt: statistisch höchste Annahmequote, " + bestText + (inDay ? ". Jetzt " + nowText + " Uhr" : "") }, cols),
+      el("div", { class: "tl-rh__scale", "aria-hidden": "true" }, hours.map(function (hour) { return el("span", { class: (best(hour) ? "best" : "") + (inDay && hour === nowHour ? " now" : ""), text: String(hour) }); })),
     ]);
   }
 

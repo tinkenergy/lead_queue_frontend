@@ -336,6 +336,10 @@
 .tl-rh--counts .tl-rh__bar { max-height: calc(100% - 14px); }
 .tl-rh__scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; margin-top: 8px; font: 500 10px/12px var(--font-mono); color: var(--ink-muted); text-align: center; }
 .tl-rh__scale .best { color: var(--follow); }
+/* Current time: thin ink line at the exact minute, hour label bold ink. */
+.tl-rh__chart { position: relative; }
+.tl-rh__now { position: absolute; top: -6px; bottom: -2px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--ink); pointer-events: none; }
+.tl-rh__scale .now { color: var(--ink); font-weight: 700; }
 
 /* Reps online: quiet hint in the header, left of Pause */
 .tl-online { display: inline-flex; align-items: center; gap: 6px; font: 400 13px/16px var(--font-sans); color: var(--ink-muted); margin-right: 6px; white-space: nowrap; }
