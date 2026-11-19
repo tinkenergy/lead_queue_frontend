@@ -38,7 +38,7 @@ button { font: inherit; }
   margin-top: 24px;
 }
 .lq-main > * { grid-column: 1; min-width: 0; }
-.lq-today { grid-column: 2; grid-row: 1 / span 6; padding-top: 48px; }
+.lq-today { grid-column: 2; grid-row: 1 / span 6; padding-top: 48px; display: grid; gap: 14px; align-content: start; }
 .lq-alerts { display: grid; gap: 10px; }
 .lq-alerts:empty { display: none; }
 .lq-tasks:empty { display: none; }
@@ -48,6 +48,12 @@ button { font: inherit; }
   .lq-main { grid-template-columns: minmax(0, 1fr) 280px; }
   .lq-page .tl-name { font-size: 40px; line-height: 44px; }
   .lq-page .tl-card { padding: 20px 24px 24px 32px; }
+}
+/* Erreichbarkeit Heute: in the narrow rail (280px) the counts live in the tooltips only */
+@media (min-width: 1100px) and (max-width: 1279px) {
+  .lq-today .tl-rh__n { display: none; }
+  .lq-today .tl-rh__chart { height: 40px; }
+  .lq-today .tl-rh__bar { max-height: none; }
 }
 @media (max-width: 1099px) {
   .lq-main { grid-template-columns: minmax(0, 1fr); }

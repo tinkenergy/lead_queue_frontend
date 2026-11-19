@@ -313,6 +313,30 @@
 .tl-phone .tl-actions, .tl-phone .tl-sheet { position: absolute; }
 .tl-phone__dim { position: absolute; inset: 0; z-index: 5; background: rgba(17,21,19,0.45); }
 
+/* Mail reminder: nothing may overflow the popup. The step bar wraps under the badge and the HubSpot link under the template name when space is short */
+.tl-modal, .tl-modal > * { min-width: 0; }
+.tl-modal > .tl-row { flex-wrap: wrap; row-gap: 10px; }
+.tl-modal .tl-mailsteps { flex: 0 1 228px; width: auto; max-width: 100%; }
+.tl-mailrow { flex-wrap: wrap; row-gap: 6px; }
+.tl-mailrow__name { flex: 1 1 140px; min-width: 0; }
+
+/* Erreichbarkeit heute (compact): bars = leads with their own Tageszeit slot per hour, 8 to 19 Uhr.
+   Light blue background = statistically good calling hours (historic data, independent of the bars). No outlines. */
+.tl-rh { padding: 12px 12px 8px; }
+.tl-rh__title { font: 700 15px/20px var(--font-display); margin: 0 2px; }
+.tl-rh__line { display: flex; align-items: center; gap: 6px; margin: 1px 2px 8px; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.tl-rh__sw { width: 12px; height: 12px; border-radius: 3px; background: color-mix(in srgb, var(--follow) 22%, transparent); flex: none; }
+.tl-rh__chart { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; height: 40px; align-items: stretch; }
+.tl-rh--counts .tl-rh__chart { height: 56px; }
+.tl-rh__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; border-radius: 5px; padding: 0 2px 2px; }
+.tl-rh__col.best { background: color-mix(in srgb, var(--follow) 22%, transparent); }
+.tl-rh__n { display: none; font: 500 10px/12px var(--font-mono); text-align: center; color: var(--ink-muted); margin-bottom: 2px; }
+.tl-rh--counts .tl-rh__n { display: block; }
+.tl-rh__bar { display: block; min-height: 2px; background: var(--reach); border-radius: 3px 3px 2px 2px; }
+.tl-rh--counts .tl-rh__bar { max-height: calc(100% - 14px); }
+.tl-rh__scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; margin-top: 3px; font: 500 10px/12px var(--font-mono); color: var(--ink-muted); text-align: center; }
+.tl-rh__scale .best { color: var(--follow); }
+
 /* Reps online: quiet hint in the header, left of Pause */
 .tl-online { display: inline-flex; align-items: center; gap: 6px; font: 400 13px/16px var(--font-sans); color: var(--ink-muted); margin-right: 6px; white-space: nowrap; }
 .tl-online svg { width: 14px; height: 14px; }

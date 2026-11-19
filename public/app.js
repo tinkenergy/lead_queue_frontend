@@ -818,13 +818,13 @@
     if (slotText) {
       var kind = slotNow ? [el("span", { class: "tl-dot tl-dot--live" }), "Täglich"] : [icon("repeat"), "Täglich"];
       if (ranges.length === 1) return [chip(slotNow ? "now" : null, kind, slotText + (slotNow ? ", jetzt" : "")), "Jeden Tag, ohne Datum"];
-      // Several ranges: day strip from 9 to 19 Uhr (lead_anruf_erreichbarkeit has no other hours), the current range teal, a line for now.
-      var pct = function (hour) { return Math.max(0, Math.min(100, (hour - 9) / 10 * 100)); };
+      // Several ranges: day strip from 8 to 19 Uhr (11 hours), the current range teal, a line for now.
+      var pct = function (hour) { return Math.max(0, Math.min(100, (hour - 8) / 11 * 100)); };
       var d = new Date(), nowPos = d.getHours() + d.getMinutes() / 60;
-      var bars = ranges.filter(function (x) { return x[1] > 9 && x[0] < 19; }).map(function (x) {
+      var bars = ranges.filter(function (x) { return x[1] > 8 && x[0] < 19; }).map(function (x) {
         return el("span", { class: nowHour >= x[0] && nowHour < x[1] ? "cur" : "", style: "left:" + pct(x[0]).toFixed(1) + "%;width:" + (pct(x[1]) - pct(x[0])).toFixed(1) + "%" });
       });
-      if (nowPos >= 9 && nowPos <= 19) bars.push(el("b", { style: "left:" + pct(nowPos).toFixed(1) + "%", title: "Jetzt" }));
+      if (nowPos >= 8 && nowPos <= 19) bars.push(el("b", { style: "left:" + pct(nowPos).toFixed(1) + "%", title: "Jetzt" }));
       var current = ranges.filter(function (x) { return nowHour >= x[0] && nowHour < x[1]; })[0];
       var next = ranges.filter(function (x) { return x[0] > nowHour; })[0];
       var hint = current ? "Jetzt erreichbar bis " + current[1] + " Uhr"
@@ -834,7 +834,10 @@
       return [el("div", null, [
         chip(slotNow ? "now" : null, kind, slotText),
         el("div", { class: "tl-daybar", role: "img", "aria-label": label }, bars),
-        el("div", { class: "tl-daybar__scale", "aria-hidden": "true" }, ["9", "11", "13", "15", "17", "19"].map(function (t) { return el("span", { text: t }); })),
+        // each label sits at its hour (8, 10 ... 18); the first is left-aligned
+        el("div", { class: "tl-daybar__scale", "aria-hidden": "true", style: "position:relative;display:block;height:14px" }, [8, 10, 12, 14, 16, 18].map(function (t) {
+          return el("span", { text: String(t), style: "position:absolute;left:" + pct(t).toFixed(1) + "%;transform:translateX(" + (t === 8 ? "0" : "-50%") + ")" });
+        })),
       ]), hint];
     }
     return [el("span", { class: "tl-avail tl-avail--none" }, [el("span", { class: "tl-avail__time", style: "padding-left:0", text: "Keine Angabe" })]), null];
@@ -995,7 +998,40 @@
     if (meetingNote) children.push(el("p", { class: "tl-muted", style: "margin:0 4px 8px;font-size:14px", text: meetingNote }));
     children = children.concat(rows);
     if (!remaining) children.push(el("div", { class: "tl-empty", html: ICON.calendar }, [el("b", { text: "Heute keine Termine mehr." }), el("span", { text: "Volle Zeit für Anrufe." })]));
-    fill(node, [el("section", { class: "tl-panel", "aria-label": "Termine heute" }, children)]);
+    var panels = [el("section", { class: "tl-panel", "aria-label": "Termine heute" }, children)];
+    var reach = renderReachHours();
+    if (reach) panels.push(reach);
+    fill(node, panels);
+  }
+
+  // "Erreichbarkeit Heute": bars = available leads that gave the hour as their own Tageszeit slot
+  // (queue.reachable_by_hour, 8 to 19 Uhr). The blue background marks the hours with the statistically
+  // highest answer rate, a constant until historic data is wired up; it never changes the bars.
+  var BEST_HOURS = [8, 12, 18];
+  var REACH_FIRST = 8, REACH_LAST = 18;
+  function renderReachHours() {
+    var counts = S.state.queue && S.state.queue.reachable_by_hour;
+    if (!counts) return null; // an older backend does not send it
+    var hours = [];
+    for (var h = REACH_FIRST; h <= REACH_LAST; h++) hours.push(h);
+    var value = function (hour) { return Number(counts[hour]) || 0; };
+    var max = Math.max.apply(null, hours.map(value));
+    var best = function (hour) { return BEST_HOURS.indexOf(hour) >= 0; };
+    var cols = hours.map(function (hour) {
+      var n = value(hour);
+      var title = hour + " bis " + (hour + 1) + " Uhr: " + n + (n === 1 ? " Lead" : " Leads") + " erreichbar" + (best(hour) ? ", statistisch höchste Annahmequote" : "");
+      return el("div", { class: "tl-rh__col" + (best(hour) ? " best" : ""), title: title }, [
+        el("span", { class: "tl-rh__n", text: String(n) }),
+        el("span", { class: "tl-rh__bar", style: "height:" + (max ? Math.round(n / max * 100) : 0) + "%" }),
+      ]);
+    });
+    var bestText = BEST_HOURS.slice(0, -1).join(", ") + " und " + BEST_HOURS[BEST_HOURS.length - 1] + " Uhr";
+    return el("section", { class: "tl-panel tl-rh tl-rh--counts", "aria-label": "Erreichbarkeit Heute" }, [
+      el("h3", { class: "tl-rh__title", text: "Erreichbarkeit Heute" }),
+      el("p", { class: "tl-rh__line" }, [el("i", { class: "tl-rh__sw" }), "Statistisch höchste Annahmequote"]),
+      el("div", { class: "tl-rh__chart", role: "img", "aria-label": "Leads mit Wunschzeit pro Stunde von " + REACH_FIRST + " bis " + (REACH_LAST + 1) + " Uhr. Blau hinterlegt: statistisch höchste Annahmequote, " + bestText }, cols),
+      el("div", { class: "tl-rh__scale", "aria-hidden": "true" }, hours.map(function (hour) { return el("span", { class: best(hour) ? "best" : "", text: String(hour) }); })),
+    ]);
   }
 
   function renderToast() {

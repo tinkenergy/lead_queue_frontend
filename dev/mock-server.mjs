@@ -48,9 +48,9 @@ function mkLead(id, name, group, extra = {}) {
 const h = new Date().getHours();
 const leads = [
   mkLead("500", "Gerald Kasten", "reachable", { calls: 2, slots: [12, 13, 18].map((x) => ({ start: `${x}:00`, end: `${x + 1}:00` })), age: 15 }),
-  mkLead("501", "Martina Hölscher", "new_leads", { calls: 0, last: null, age: 1, override: { stage: "01 | Neu", stage_id: "new-stage-id" } }),
+  mkLead("501", "Martina Hölscher", "new_leads", { calls: 0, last: null, age: 1, slots: [{ start: "8:00", end: "9:00" }, { start: "12:00", end: "13:00" }], override: { stage: "01 | Neu", stage_id: "new-stage-id" } }),
   mkLead("502", "Jana Beispiel", "hot_leads", { calls: 1, age: 4, slots: [{ start: "18:00", end: "19:00" }] }),
-  mkLead("503", "Ralf Opp", "backlog", { calls: 3, age: 40 }),
+  mkLead("503", "Ralf Opp", "backlog", { calls: 3, age: 40, slots: [8, 9, 12, 16].map((x) => ({ start: `${x}:00`, end: `${x + 1}:00` })) }),
   mkLead("506", "Petra Lindner", "called_today", { calls: 1, age: 0, last: 1 / 24 }),
   mkLead("504", "Karin Melcher", "backlog", { calls: 2, age: 22, callback: iso(now() - 3 * 3600000) }),
   mkLead("505", "Sabine Ortmann", null, { calls: 1, age: 6, callback: iso(hourStart() + 2 * 3600000 + 30 * 60000) }),
@@ -94,6 +94,14 @@ function matches(l, f, ignore) {
 const active = (f) => ["groups", "min_unreached_calls", "age", "sources"].filter((d) =>
   d === "groups" ? f.groups.length : d === "sources" ? f.sources.length : d === "age" ? f.age : f[d] !== null);
 
+function reachableByHour(pool) {
+  const counts = {};
+  for (const l of pool) for (const s of l.reachability.slots) {
+    const hour = Number(s.start.split(":")[0]);
+    counts[hour] = (counts[hour] || 0) + 1;
+  }
+  return counts;
+}
 function queue() {
   const pool = available();
   const by = (list) => Object.fromEntries(GROUPS.map((g) => [g, list.filter((l) => l.group === g).length]));
@@ -101,6 +109,7 @@ function queue() {
     total: leads.length, by_group: by(leads.filter((l) => !heldBack(l))), scheduled: leads.filter(heldBack).length,
     cooling_down: me.cooldown.size, active_reps: me.lease ? 1 : 0, synced_at: iso(now() - 600000),
     available: pool.length, available_by_group: by(pool), matching_filters: pool.filter((l) => matches(l, me.filters)).length,
+    reachable_by_hour: reachableByHour(pool),
   };
 }
 function callbacks() {
