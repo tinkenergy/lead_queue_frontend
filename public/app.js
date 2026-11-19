@@ -1007,6 +1007,7 @@
   // "Erreichbarkeit Heute": bars = available leads that gave the hour as their own Tageszeit slot
   // (queue.reachable_by_hour, 8 to 19 Uhr). The blue background marks the hours with the statistically
   // highest answer rate, a constant until historic data is wired up; it never changes the bars.
+  // No numbers above the bars: each column carries its count in the tooltip.
   var BEST_HOURS = [8, 12, 18];
   var REACH_FIRST = 8, REACH_LAST = 18;
   function renderReachHours() {
@@ -1021,12 +1022,11 @@
       var n = value(hour);
       var title = hour + " bis " + (hour + 1) + " Uhr: " + n + (n === 1 ? " Lead" : " Leads") + " erreichbar" + (best(hour) ? ", statistisch höchste Annahmequote" : "");
       return el("div", { class: "tl-rh__col" + (best(hour) ? " best" : ""), title: title }, [
-        el("span", { class: "tl-rh__n", text: String(n) }),
         el("span", { class: "tl-rh__bar", style: "height:" + (max ? Math.round(n / max * 100) : 0) + "%" }),
       ]);
     });
     var bestText = BEST_HOURS.slice(0, -1).join(", ") + " und " + BEST_HOURS[BEST_HOURS.length - 1] + " Uhr";
-    return el("section", { class: "tl-panel tl-rh tl-rh--counts", "aria-label": "Erreichbarkeit Heute" }, [
+    return el("section", { class: "tl-panel tl-rh", "aria-label": "Erreichbarkeit Heute" }, [
       el("h3", { class: "tl-rh__title", text: "Erreichbarkeit Heute" }),
       el("p", { class: "tl-rh__line" }, [el("i", { class: "tl-rh__sw" }), "Statistisch höchste Annahmequote"]),
       el("div", { class: "tl-rh__chart", role: "img", "aria-label": "Leads mit Wunschzeit pro Stunde von " + REACH_FIRST + " bis " + (REACH_LAST + 1) + " Uhr. Blau hinterlegt: statistisch höchste Annahmequote, " + bestText }, cols),

@@ -322,19 +322,19 @@
 
 /* Erreichbarkeit heute (compact): bars = leads with their own Tageszeit slot per hour, 8 to 19 Uhr.
    Light blue background = statistically good calling hours (historic data, independent of the bars). No outlines. */
-.tl-rh { padding: 12px 12px 8px; }
-.tl-rh__title { font: 700 15px/20px var(--font-display); margin: 0 2px; }
-.tl-rh__line { display: flex; align-items: center; gap: 6px; margin: 1px 2px 8px; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
+.tl-rh { padding: 20px 20px 16px; }
+.tl-rh__title { font: 700 15px/20px var(--font-display); margin: 0; }
+.tl-rh__line { display: flex; align-items: center; gap: 6px; margin: 8px 0 18px; font-size: 13px; line-height: 18px; color: var(--ink-muted); }
 .tl-rh__sw { width: 12px; height: 12px; border-radius: 3px; background: color-mix(in srgb, var(--follow) 22%, transparent); flex: none; }
-.tl-rh__chart { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; height: 40px; align-items: stretch; }
-.tl-rh--counts .tl-rh__chart { height: 56px; }
-.tl-rh__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; border-radius: 5px; padding: 0 2px 2px; }
+.tl-rh__chart { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; height: 56px; align-items: stretch; }
+.tl-rh--counts .tl-rh__chart { height: 72px; }
+.tl-rh__col { display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; border-radius: 5px; padding: 0 3px 3px; }
 .tl-rh__col.best { background: color-mix(in srgb, var(--follow) 22%, transparent); }
 .tl-rh__n { display: none; font: 500 10px/12px var(--font-mono); text-align: center; color: var(--ink-muted); margin-bottom: 2px; }
 .tl-rh--counts .tl-rh__n { display: block; }
 .tl-rh__bar { display: block; min-height: 2px; background: var(--reach); border-radius: 3px 3px 2px 2px; }
 .tl-rh--counts .tl-rh__bar { max-height: calc(100% - 14px); }
-.tl-rh__scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 3px; margin-top: 3px; font: 500 10px/12px var(--font-mono); color: var(--ink-muted); text-align: center; }
+.tl-rh__scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 4px; margin-top: 8px; font: 500 10px/12px var(--font-mono); color: var(--ink-muted); text-align: center; }
 .tl-rh__scale .best { color: var(--follow); }
 
 /* Reps online: quiet hint in the header, left of Pause */
