@@ -96,7 +96,14 @@ button { font: inherit; }
 .lq-toast { position: fixed; left: 50%; bottom: 112px; transform: translateX(-50%); z-index: 40; }
 .lq-toast:empty { display: none; }
 
-/* "Heute": meetings and callbacks in one list */
+/* "Heute": meetings and callbacks in one list.
+   The rail stays inside its column. A plain 1fr track cannot shrink below its content, so one
+   long guest name or sub line used to widen the panel past the page and add a horizontal
+   scrollbar; minmax(0, 1fr) lets the name be cut with an ellipsis instead. */
+.lq-today { grid-template-columns: minmax(0, 1fr); }
+.tl-meet { grid-template-columns: 52px minmax(0, 1fr); }
+.tl-meet > span { min-width: 0; }
+.tl-meet__sub { max-width: 100%; overflow-wrap: anywhere; }
 .lq-meet__kind { font-size: 12px; line-height: 16px; font-weight: 600; color: var(--ink-muted); display: inline-flex; align-items: center; gap: 4px; }
 .lq-meet__kind svg { width: 12px; height: 12px; }
 .tl-meet--now { background: var(--reach-soft); }
