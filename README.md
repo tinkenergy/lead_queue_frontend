@@ -35,7 +35,8 @@ The page is in German and follows the design system's Fokus layout (version A).
 - **Lead holen / Erledigt, nächster Lead / Überspringen (nicht angerufen)**: `POST /lead`,
   `/lead/done`, `/lead/skip`. After Erledigt a toast offers "Rückgängig" for 5 seconds
   (`/lead/undo`). When a mail reminder is due, the popup comes first and "Verstanden" gets
-  the next lead.
+  the next lead. **N** confirms "Verstanden" too (a held key does not), so N, N moves on
+  from one lead to the next.
 - **Timer**: counts down to `reservation.return_at`; from `warn_at` "Noch dran?" with
   **Behalten**; at `return_at` the page sends `/lead/expire` and offers **Zurückholen**.
   Clicking the name opens HubSpot and extends the reservation (`reason: hubspot_opened`).

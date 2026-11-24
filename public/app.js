@@ -1071,7 +1071,7 @@
       el("h2", { class: "tl-modal__title", id: "mr-title", text: r.mail_name + " an " + r.contact_name + " senden?" }),
       el("div", { class: "tl-mailrow" }, [icon("mail"), el("span", { class: "tl-mailrow__name", text: "Vorlage: " + r.mail_name }),
         el("a", { href: r.hubspot_email_url, target: "_blank", rel: "noopener", title: "Öffnet das E-Mail-Fenster des Kontakts in HubSpot" }, ["E-Mail in HubSpot schreiben ", icon("link")])]),
-      el("div", { class: "tl-modal__actions" }, [el("button", { class: "tl-btn tl-btn--primary", type: "button", id: "mr-ok", onclick: closeReminder }, ["Verstanden"])]),
+      el("div", { class: "tl-modal__actions" }, [el("button", { class: "tl-btn tl-btn--primary", type: "button", id: "mr-ok", onclick: closeReminder }, S.mobile ? ["Verstanden"] : ["Verstanden ", el("kbd", { text: "N" })])]),
     ])])]);
     asSheet(node);
     var ok = $("mr-ok"); if (ok) ok.focus();
@@ -1093,7 +1093,7 @@
     var node = $("modal");
     node.dataset.static = "1";
     var close = function () { delete node.dataset.static; fill(node, []); };
-    var rows = [["N", "Erledigt, nächster Lead (oder Lead holen)"], ["S", "Überspringen"], ["B", "Behalten"], ["F", "Filter Gruppe öffnen"], ["1 bis 9", "Aufgabe abhaken"], ["Esc", "Panel oder Fenster schließen"]];
+    var rows = [["N", "Erledigt, nächster Lead (oder Lead holen); im Mail-Hinweis: Verstanden"], ["S", "Überspringen"], ["B", "Behalten"], ["F", "Filter Gruppe öffnen"], ["1 bis 9", "Aufgabe abhaken"], ["Esc", "Panel oder Fenster schließen"]];
     var dl = el("dl", { class: "lq-shortcuts" });
     rows.forEach(function (r) { dl.appendChild(el("dt", null, [el("kbd", { text: r[0] })])); dl.appendChild(el("dd", { text: r[1] })); });
     fill(node, [el("div", { class: "tl-scrim", onclick: function (e) { if (e.target === e.currentTarget) close(); } }, [el("div", { class: "tl-modal", role: "dialog", "aria-modal": "true", "aria-label": "Tastenkürzel" }, [
@@ -1155,8 +1155,15 @@
     var target = event.target;
     if (event.metaKey || event.ctrlKey || event.altKey) return;
     if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) return;
-    if (S.reminder || $("modal").dataset.static) return;
     var key = event.key.toLowerCase();
+    // The mail popup is only an overlay, and "Erledigt" is not reachable while it is open, so N
+    // can confirm it too: N, N goes from one lead to the next without the mouse. A held key
+    // (repeat) must not dismiss a popup that just appeared.
+    if (S.reminder) {
+      if (key === "n" && !event.repeat) { event.preventDefault(); closeReminder(); }
+      return;
+    }
+    if ($("modal").dataset.static) return;
     if (key === "n") { event.preventDefault(); if (lead()) finish(false); else if (!status().paused) takeLead(); }
     else if (key === "s" && lead()) { event.preventDefault(); skip(); }
     else if (key === "b" && lead()) { event.preventDefault(); keep("keep"); }
